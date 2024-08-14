@@ -10,13 +10,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import java.nio.file.Files
+import java.nio.file.Path
+import kotlin.io.path.exists
 
 class WorkspaceState {
     val tabIndex = mutableIntStateOf(0)
     val tabs = mutableStateListOf<TabState>()
 
-    fun addTab(title: String, content: String = "", activateNewTab: Boolean = true) {
-        tabs.add(TabState(title, content))
+    fun addTab(title: String, file: Path, activateNewTab: Boolean = true) {
+        tabs.add(TabState(title, file))
         if (activateNewTab) {
             setActiveTab(tabs.size - 1)
         }
@@ -79,13 +82,20 @@ fun Workspace(state: WorkspaceState) {
     }
 }
 
-class TabState(title: String = "<unknown>", content: String = "") {
+class TabState(title: String = "<unknown>", val file: Path) {
     val title = mutableStateOf(title)
-    val editorState = EditorState(content)
+    val editorState = EditorState(readContentIfExists())
 
     fun updateTitle(newTitle: String) {
         title.value = newTitle
     }
+
+    private fun readContentIfExists(): String =
+        if (file.exists()) {
+            Files.readString(file)
+        } else {
+            ""
+        }
 }
 
 

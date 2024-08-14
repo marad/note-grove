@@ -6,9 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.input.getTextBeforeSelection
 
 class EditorState(content: String = "") {
     val dirty = mutableStateOf(false)
@@ -22,11 +20,10 @@ class EditorState(content: String = "") {
     fun isDirty() = dirty.value
 
     fun updateContent(newContent: TextFieldValue, markDirty: Boolean = true) {
-        content.value = newContent
-        println(newContent.getTextBeforeSelection(2))
-        if (markDirty) {
+        if (markDirty && content.value.text != newContent.text) {
             markDirty()
         }
+        content.value = newContent
     }
 
     fun requestFocus() {

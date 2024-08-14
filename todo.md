@@ -10,6 +10,7 @@
 - vim mode
 - note completion (TextFieldValue.getTextBeforeSelection(2) == "[[")
 - formatting options
+- scrollbar
 
 # Actions
 - create actions and shortcut system

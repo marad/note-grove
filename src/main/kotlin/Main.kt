@@ -18,7 +18,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.*
-import java.nio.file.Files
+import java.nio.file.Path
 
 
 class AppState {
@@ -34,7 +34,7 @@ fun App(state: AppState) {
         ToolBar(
             onFilesClicked = {
                 println("Adding tab")
-                state.workspaceState.addTab("testing")
+                state.workspaceState.addTab("testing", Path.of("/tmp/testfile.md"))
             }
         )
         //FileList()
@@ -183,8 +183,7 @@ fun main() = application {
                 SearchDialog(appState.searchDialogState,
                     onSearchActions = {name ->
                         vault.searchFiles(name).map { Action(it) {
-                            val content = Files.readString(vault.pathToFile(it))
-                            appState.workspaceState.addTab(it, content)
+                            appState.workspaceState.addTab(it, vault.pathToFile(it))
                         } }
                     })
             }
