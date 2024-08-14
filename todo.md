@@ -3,14 +3,15 @@
 # Editing
 - change the font
 - create new file
-- marking dirty files
-- saving 
+- ~~marking dirty files~~
+- ~~saving~~ 
 - update `updatedAt` field upon save
 - syntax highlighting & styles
 - vim mode
 - note completion (TextFieldValue.getTextBeforeSelection(2) == "[[")
 - formatting options
 - scrollbar
+- openning already opened file should just switch to it
 
 # Actions
 - create actions and shortcut system

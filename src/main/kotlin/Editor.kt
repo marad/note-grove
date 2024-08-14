@@ -17,6 +17,10 @@ class EditorState(content: String = "") {
         dirty.value = true
     }
 
+    fun clearDirty() {
+        dirty.value = false
+    }
+
     fun isDirty() = dirty.value
 
     fun updateContent(newContent: TextFieldValue, markDirty: Boolean = true) {

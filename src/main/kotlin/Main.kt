@@ -156,6 +156,10 @@ fun main() = application {
     val vault = Vault("/home/marad/dendron/notes/")
     val appState = remember { AppState() }
 
+    val appActions = listOf(
+        createSaveAction(appState)
+    )
+
     Window(
         title = "Note Grove",
         state = WindowState(size = DpSize(1000.dp, 800.dp)),
@@ -181,10 +185,20 @@ fun main() = application {
 
             if (appState.searchDialogState.isVisible()) {
                 SearchDialog(appState.searchDialogState,
-                    onSearchActions = {name ->
-                        vault.searchFiles(name).map { Action(it) {
-                            appState.workspaceState.addTab(it, vault.pathToFile(it))
-                        } }
+                    onSearchActions = { name ->
+                        if (name.startsWith(">")) {
+                            val searchTerm = name.drop(1).trim()
+                            appActions.filter {
+                                it.name.contains(searchTerm) ||
+                                        (it.description?.contains(searchTerm) ?: false)
+                            }
+                        } else {
+                            vault.searchFiles(name).map {
+                                Action(it) {
+                                    appState.workspaceState.addTab(it, vault.pathToFile(it))
+                                }
+                            }
+                        }
                     })
             }
         }

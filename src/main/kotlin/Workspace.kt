@@ -40,7 +40,7 @@ class WorkspaceState {
             closeTab(tabIndex.value)
         }
     }
-    fun activeTabState() = tabs[tabIndex.value]
+    fun activeTabState() = tabs.getOrNull(tabIndex.value)
 
 }
 
@@ -61,7 +61,7 @@ fun Workspace(state: WorkspaceState) {
             }
 
             val tabState = state.activeTabState()
-            Editor(tabState.editorState)
+            Editor(tabState!!.editorState)
         }
     } else {
         Row(
