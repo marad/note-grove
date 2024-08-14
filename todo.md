@@ -14,8 +14,8 @@
 - openning already opened file should just switch to it
 
 # Actions
-- create actions and shortcut system
-- add actions search in note search
+- ~~create actions and shortcut system~~
+- ~~add actions search in note search~~
 - new note
 - rename note (update all other notes)
 - refactor hierarchy (update all other notes)

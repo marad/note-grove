@@ -14,6 +14,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.*
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -126,6 +128,10 @@ class SearchDialogState {
     private val visible = mutableStateOf(false)
     val actionLauncherState = LauncherState()
 
+    fun showWithPrefix(prefix: String) {
+        show()
+        actionLauncherState.text.value = TextFieldValue(prefix, TextRange(prefix.length))
+    }
     fun show() { visible.value = true}
     fun hide() { visible.value = false }
     fun isVisible() = visible.value
@@ -143,8 +149,8 @@ fun SearchDialog(state: SearchDialogState, onSearchActions: (String) -> List<Act
                 state.actionLauncherState.actions.addAll(onSearchActions(name))
             },
             onComplete = { action ->
-                action.call()
                 state.hide()
+                action.call()
             },
             onCancel = { state.hide() }
         )
@@ -155,29 +161,24 @@ fun SearchDialog(state: SearchDialogState, onSearchActions: (String) -> List<Act
 fun main() = application {
     val vault = Vault("/home/marad/dendron/notes/")
     val appState = remember { AppState() }
+    val shortcuts = Shortcuts()
 
-    val appActions = listOf(
-        createSaveAction(appState)
-    )
+    val saveAction = createSaveAction(appState)
+    val showSearchDialog = createSearchNoteAction(appState)
+    val showActionSearchDialog = createSearchActionsAction(appState)
+    val closeTabAction = createCloseTabAction(appState)
+
+    shortcuts.add(Shortcut(Key.P, KeyModifier.Ctrl), showSearchDialog)
+    shortcuts.add(Shortcut(Key.P, KeyModifier.Ctrl, KeyModifier.Shift), showActionSearchDialog)
+    shortcuts.add(Shortcut(Key.S, KeyModifier.Ctrl), saveAction)
+    shortcuts.add(Shortcut(Key.W, KeyModifier.Ctrl), closeTabAction)
+
+    val appActions = listOf(saveAction, showSearchDialog, closeTabAction)
 
     Window(
         title = "Note Grove",
         state = WindowState(size = DpSize(1000.dp, 800.dp)),
-        onPreviewKeyEvent = {
-            if (it.key == Key.P && it.isCtrlPressed) {
-                if (it.type == KeyEventType.KeyDown) {
-                    appState.searchDialogState.show()
-                    return@Window false
-                }
-            }
-            if (it.key == Key.W && it.isCtrlPressed) {
-                if (it.type == KeyEventType.KeyDown) {
-                    appState.workspaceState.closeActiveTab()
-                    return@Window false
-                }
-            }
-            return@Window false
-        },
+        onPreviewKeyEvent = shortcuts::handle,
         onCloseRequest = ::exitApplication) {
 
         MaterialTheme {

@@ -8,6 +8,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.*
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -23,6 +24,7 @@ data class Action(
 }
 
 class LauncherState {
+    val text = mutableStateOf(TextFieldValue())
     val actions = mutableStateListOf<Action>()
     val selectedItem = mutableStateOf(0)
 
@@ -45,8 +47,6 @@ fun ActionLauncher(state: LauncherState,
     LaunchedEffect(Unit) {
         searchFieldFocusRequester.requestFocus()
     }
-
-    var text by remember { mutableStateOf("") }
 
     Card {
         Column(
@@ -83,10 +83,10 @@ fun ActionLauncher(state: LauncherState,
                 }
         ) {
             OutlinedTextField(
-                value = text,
+                value = state.text.value,
                 onValueChange = {
-                    text = it
-                    onSearchChange(it)
+                    state.text.value = it
+                    onSearchChange(it.text)
                 },
                 singleLine = true,
                 placeholder = {
