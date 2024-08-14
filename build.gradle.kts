@@ -22,6 +22,7 @@ dependencies {
     // With compose.desktop.common you will also lose @Preview functionality
     implementation(compose.desktop.currentOs)
     implementation("com.google.code.gson:gson:2.11.0")
+    implementation("com.vladsch.flexmark:flexmark-all:0.64.0")
 }
 
 compose.desktop {

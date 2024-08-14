@@ -5,11 +5,11 @@
 - create new file
 - ~~marking dirty files~~
 - ~~saving~~ 
-- update `updatedAt` field upon save
+- ~~update `updated` field upon save~~
 - syntax highlighting & styles
 - vim mode
 - note completion (TextFieldValue.getTextBeforeSelection(2) == "[[")
-- formatting options
+- formatting options bubble after select
 - scrollbar
 - openning already opened file should just switch to it
 
