@@ -22,4 +22,7 @@
 
 # Other
 - Note Tree UI
+- Configuration (vault path)
 - Settings (ex. font, light/dark ui)
+- Support multiple vaults
+- Journal notes
