@@ -144,6 +144,23 @@ fun Document.toAnnotatedString(): AnnotatedString {
 
             lastOffset = it.endOffset
         },
+        VisitHandler(Link::class.java) {
+            appendPrevious(it.startOffset)
+            ann.pushStyle(grayedOut)
+            ann.append(it.baseSequence.substring(it.startOffset, it.firstChild?.startOffset ?: it.startOffset))
+            ann.pop()
+
+            ann.pushStyle(SpanStyle(color = Color.Blue))
+            //it.children.forEach { ann.append(it, false) }
+            ann.append(it.childChars)
+            ann.pop()
+
+            ann.pushStyle(grayedOut)
+            ann.append(it.baseSequence.substring(it.lastChild?.endOffset ?: it.endOffset, it.endOffset))
+            ann.pop()
+
+            lastOffset = it.endOffset
+        },
         VisitHandler(WikiLink::class.java) {
             appendPrevious(it.startOffset)
             ann.pushStyle(grayedOut)
