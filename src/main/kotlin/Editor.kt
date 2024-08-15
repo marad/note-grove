@@ -9,7 +9,10 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.text.*
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.ExperimentalTextApi
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -19,139 +22,155 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vladsch.flexmark.ast.*
-import com.vladsch.flexmark.ast.Paragraph
 import com.vladsch.flexmark.ext.wikilink.WikiLink
 import com.vladsch.flexmark.ext.yaml.front.matter.YamlFrontMatterBlock
 import com.vladsch.flexmark.util.ast.Document
-import com.vladsch.flexmark.util.ast.Node
 import com.vladsch.flexmark.util.ast.NodeVisitor
 import com.vladsch.flexmark.util.ast.VisitHandler
-import kotlin.text.substring
+
 
 private val grayedOut = SpanStyle(color = Color.LightGray)
-@Suppress("IMPLICIT_CAST_TO_ANY")
-fun AnnotatedString.Builder.append(it: Node, shouldAppendRest: Boolean = true) {
-    fun appendRest() {
-        if (shouldAppendRest) {
-            val sb = StringBuilder()
-            it.astExtraChars(sb)
-            val extra = sb.toString()
-            append(
-                it.document.chars.substring(
-                    it.endOffset,
-                    it.next?.startOffset ?: it.parent?.endOffset ?: it.endOffset
-                )
-            )
-        }
+
+
+fun Document.toAnnotatedString(): AnnotatedString {
+    val ann = AnnotatedString.Builder()
+    var lastOffset = 0
+    fun appendPrevious(startOffset: Int) {
+        ann.append(document.chars.substring(lastOffset, startOffset))
     }
-    val ignored = when(it) {
-        is Document -> { it.children.forEach { append(it) } }
-        is YamlFrontMatterBlock -> {
-            pushStyle(grayedOut)
-            append(it.chars)
-            pop()
-            appendRest()
-        }
-        is Paragraph -> {
-            it.children.forEach { append(it) }
-            appendRest()
-        }
-        is Text -> {
-            append(it.chars)
-            appendRest()
-        }
-        is Heading -> {
-            pushStyle(SpanStyle(fontSize = (22 - 2*it.level).coerceAtLeast(16).sp))
+
+
+    val visitor = NodeVisitor()
+    visitor.addHandlers(listOf(
+        VisitHandler(YamlFrontMatterBlock::class.java) {
+            appendPrevious(it.startOffset)
+            ann.pushStyle(grayedOut)
+            ann.append(it.chars)
+            ann.pop()
+            lastOffset = it.endOffset
+        },
+        VisitHandler(Emphasis::class.java) {
+            appendPrevious(it.startOffset)
+            ann.pushStyle(grayedOut)
+            ann.append(it.openingMarker)
+            ann.pop()
+            ann.pushStyle(SpanStyle(fontStyle = FontStyle.Italic))
+            ann.append(it.childChars)
+            ann.pop()
+            ann.pushStyle(grayedOut)
+            ann.append(it.closingMarker)
+            ann.pop()
+            lastOffset = it.endOffset
+        },
+        VisitHandler(StrongEmphasis::class.java) {
+            appendPrevious(it.startOffset)
+            ann.pushStyle(grayedOut)
+            ann.append(it.openingMarker)
+            ann.pop()
+            ann.pushStyle(SpanStyle(fontWeight = FontWeight.Bold))
+            ann.append(it.childChars)
+            ann.pop()
+            ann.pushStyle(grayedOut)
+            ann.append(it.closingMarker)
+            ann.pop()
+            lastOffset = it.endOffset
+        },
+        VisitHandler(Heading::class.java) {
+            appendPrevious(it.startOffset)
+            ann.pushStyle(SpanStyle(fontSize = (22 - 2*it.level).coerceAtLeast(16).sp))
             if (it.openingMarker.isNotBlank()) {
-                pushStyle(grayedOut)
-                append(it.openingMarker)
-                append(" ")
-                pop()
+                ann.pushStyle(grayedOut)
+                ann.append(it.openingMarker)
+                ann.append(" ")
+                ann.pop()
             }
-            it.children.forEach { append(it) }
-            pop()
-            appendRest()
+            ann.append(it.childChars)
+            if (it.closingMarker.isNotBlank()) {
+                ann.pushStyle(grayedOut)
+                ann.append("\n")
+                ann.append(it.closingMarker)
+                ann.pop()
+            }
+            ann.pop()
+            lastOffset = it.endOffset
+        },
+        VisitHandler(FencedCodeBlock::class.java) {
+            appendPrevious(it.startOffset)
+            ann.pushStyle(grayedOut)
+            ann.append(it.openingMarker)
+            ann.append(it.info)
+            ann.pop()
+
+            ann.pushStyle(SpanStyle(color = Color.Gray))
+            ann.append("\n")
+            ann.append(it.childChars)
+            ann.pop()
+
+            ann.pushStyle(grayedOut)
+            ann.append(it.closingMarker)
+            ann.pop()
+            lastOffset = it.endOffset
+        },
+        VisitHandler(Code::class.java) {
+            appendPrevious(it.startOffset)
+            ann.pushStyle(grayedOut)
+            ann.append(it.openingMarker)
+            ann.pop()
+
+            ann.pushStyle(SpanStyle(color = Color.Gray))
+            ann.append(it.childChars)
+            ann.pop()
+
+            ann.pushStyle(grayedOut)
+            ann.append(it.closingMarker)
+            ann.pop()
+
+            lastOffset = it.endOffset
+        },
+        VisitHandler(LinkRef::class.java) {
+            appendPrevious(it.startOffset)
+            ann.pushStyle(grayedOut)
+            ann.append(it.baseSequence.substring(it.startOffset, it.firstChild?.startOffset ?: it.startOffset))
+            ann.pop()
+
+            ann.pushStyle(SpanStyle(color = Color.Blue))
+            //it.children.forEach { ann.append(it, false) }
+            ann.append(it.childChars)
+            ann.pop()
+
+            ann.pushStyle(grayedOut)
+            ann.append(it.baseSequence.substring(it.lastChild?.endOffset ?: it.endOffset, it.endOffset))
+            ann.pop()
+
+            lastOffset = it.endOffset
+        },
+        VisitHandler(WikiLink::class.java) {
+            appendPrevious(it.startOffset)
+            ann.pushStyle(grayedOut)
+            ann.append(it.baseSequence.substring(it.startOffset, it.firstChild?.startOffset ?: it.startOffset))
+            ann.pop()
+
+            ann.pushStyle(SpanStyle(color = Color.Blue))
+            ann.append(it.childChars)
+            ann.pop()
+
+            ann.pushStyle(grayedOut)
+            ann.append(it.baseSequence.substring(it.lastChild?.endOffset ?: it.endOffset, it.endOffset))
+            ann.pop()
+
+            lastOffset = it.endOffset
         }
+    ))
 
-        is Emphasis -> {
-            pushStyle(grayedOut)
-            append(it.openingMarker)
-            pop()
+    visitor.visit(document)
 
-            pushStyle(SpanStyle(fontStyle = FontStyle.Italic))
-            it.children.forEach { append(it, false) }
-            pop()
-
-            pushStyle(grayedOut)
-            append(it.closingMarker)
-            pop()
-            appendRest()
-        }
-
-        is StrongEmphasis -> {
-            pushStyle(grayedOut)
-            append(it.openingMarker)
-            pop()
-
-            pushStyle(SpanStyle(fontWeight = FontWeight.Bold))
-            it.children.forEach { append(it, false) }
-            pop()
-
-            pushStyle(grayedOut)
-            append(it.closingMarker)
-            pop()
-            appendRest()
-        }
-
-        is BulletList -> {
-            append(it.chars)
-            appendRest()
-        }
-
-        is LinkRef, is WikiLink -> {
-            pushStyle(grayedOut)
-            append(it.baseSequence.substring(it.startOffset, it.firstChild?.startOffset ?: it.startOffset))
-            pop()
-
-            pushStyle(SpanStyle(color = Color.Blue))
-            it.children.forEach { append(it, false) }
-            pop()
-
-            pushStyle(grayedOut)
-            append(it.baseSequence.substring(it.lastChild?.endOffset ?: it.endOffset, it.endOffset))
-            pop()
-            appendRest()
-        }
-
-        is FencedCodeBlock -> {
-            pushStyle(grayedOut)
-            append(it.openingMarker)
-            append(it.info)
-            pop()
-
-            append(it.contentChars)
-            //it.children.forEach { append(it, true) }
-
-            pushStyle(grayedOut)
-            append(it.closingMarker)
-            pop()
-            appendRest()
-        }
-
-        is SoftLineBreak -> {
-            append(it.chars)
-        }
-
-        else -> {
-            println("unhandled: $it")
-        }
-    }
+    ann.append(document.chars.substring(lastOffset, document.endOffset))
+    return ann.toAnnotatedString()
 }
-
 
 class EditorState(content: String = "") {
     val dirty = mutableStateOf(false)
-    val content = mutableStateOf(TextFieldValue(content))
+    private val content = mutableStateOf(TextFieldValue(Markdown.parse(content).toAnnotatedString()))
     val focusRequester = FocusRequester()
 
     fun markDirty() {
@@ -164,65 +183,18 @@ class EditorState(content: String = "") {
 
     fun isDirty() = dirty.value
 
+    fun getContent(): TextFieldValue = content.value
+
+    fun updateContent(text: String, markDirty: Boolean = true) {
+        updateContent(content.value.copy(text), markDirty)
+    }
+
     fun updateContent(newContent: TextFieldValue, markDirty: Boolean = true) {
         if (markDirty && content.value.text != newContent.text) {
             markDirty()
         }
-
         val md = Markdown.parse(newContent.text)
-        val ann = AnnotatedString.Builder()
-
-//        md.children.forEach {
-//            when(it) {
-//                is YamlFrontMatterBlock -> {
-//                    ann.pushStyle(SpanStyle(color = Color.LightGray))
-//                    ann.append(md.chars.substring(it.startOffset, it.next?.startOffset ?: it.endOffset))
-//                    ann.pop()
-//                    lastPosition = it.endOffset
-//                }
-//                else -> {
-//                    ann.append(md.chars.substring(it.startOffset, it.next?.startOffset ?: md.endOffset))
-//                }
-//            }
-//        }
-
-
-
-//        val visitor = NodeVisitor()
-//        visitor.addHandlers(arrayOf(
-//            VisitHandler(YamlFrontMatterBlock::class.java) {
-//                ann.pushStyle(SpanStyle(color = Color.LightGray))
-//                ann.append(it.chars)
-//                ann.pop()
-//                ann.append(md.chars.substring(it.endOffset, it.next?.startOffset ?: it.parent?.endOffset ?: it.endOffset))
-//            },
-//            VisitHandler(Paragraph::class.java) {
-//                visitor.visitChildren(it)
-//                ann.append(md.chars.substring(it.endOffset, it.next?.startOffset ?: it.parent?.endOffset ?: it.endOffset))
-//            },
-//            VisitHandler(Text::class.java) {
-//                ann.append(it.chars)
-//                ann.append(md.chars.substring(it.endOffset, it.next?.startOffset ?: it.parent?.endOffset ?: it.endOffset))
-//            },
-//            VisitHandler(Heading::class.java) {
-//                ann.pushStyle(SpanStyle(fontSize = (22 - 2*it.level).coerceAtLeast(16).sp))
-//                if (it.openingMarker.isNotBlank()) {
-//                    ann.append(it.openingMarker)
-//                    ann.append(" ")
-//                }
-//                visitor.visitChildren(it)
-//                ann.pop()
-//                ann.append(md.chars.substring(it.endOffset, it.next?.startOffset ?: it.parent?.endOffset ?: it.endOffset))
-//            },
-//
-//            VisitHandler(Node::class.java) {
-//                ann.append(md.chars.substring(it.endOffset, it.next?.startOffset ?: it.parent?.endOffset ?: it.endOffset))
-//            }
-//        ))
-//        visitor.visit(md)
-
-        ann.append(md)
-        content.value = newContent.copy(ann.toAnnotatedString())
+        content.value = newContent.copy(md.toAnnotatedString())
     }
 
     fun requestFocus() {
@@ -254,7 +226,7 @@ fun BlockCursorOutlinedTextField(
 
 @Composable
 fun Editor(state: EditorState) {
-    BlockCursorOutlinedTextField(state.content.value, state::updateContent,
+    BlockCursorOutlinedTextField(state.getContent(), state::updateContent,
         textStyle = TextStyle(
             fontFamily = sourceCodePro,
             fontSize = 16.sp

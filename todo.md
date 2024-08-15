@@ -1,12 +1,12 @@
 
 
 # Editing
-- change the font
+- ~~change the font~~
 - create new file
 - ~~marking dirty files~~
 - ~~saving~~ 
 - ~~update `updated` field upon save~~
-- syntax highlighting & styles
+- ~~syntax highlighting & styles~~
 - vim mode
 - note completion (TextFieldValue.getTextBeforeSelection(2) == "[[")
 - formatting options bubble after select

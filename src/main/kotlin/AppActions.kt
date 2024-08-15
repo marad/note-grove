@@ -19,7 +19,7 @@ fun createCloseTabAction(appState: AppState): Action =
 fun createSaveAction(appState: AppState): Action =
     Action("Save", "Saves current file") {
         appState.workspaceState.activeTabState()?.let { tab ->
-            val content = tab.editorState.content.value.text
+            val content = tab.editorState.getContent().text
 
             val md = Markdown.parse(content)
             val visitor = NodeVisitor(
@@ -29,7 +29,7 @@ fun createSaveAction(appState: AppState): Action =
             visitor.visit(md)
 
             val updatedContent = Markdown.render(md)
-            tab.editorState.content.value = tab.editorState.content.value.copy(updatedContent)
+            tab.editorState.updateContent(updatedContent)
 
             Files.write(tab.file, updatedContent.toByteArray())
             tab.editorState.clearDirty()
