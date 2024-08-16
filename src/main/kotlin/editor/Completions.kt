@@ -1,6 +1,8 @@
 package editor
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
@@ -45,15 +47,16 @@ class CompletionsState() {
 }
 
 @Composable
-fun Completions(state: CompletionsState) {
-    Column(modifier = Modifier
+fun Completions(state: CompletionsState, modifier: Modifier = Modifier) {
+    Column(modifier = modifier
+        .background(MaterialTheme.colors.surface)
         .padding(5.dp))
     {
         state.getItems().forEachIndexed { index, it ->
             Surface(
                 color = if (state.isSelected(index)) MaterialTheme.colors.secondary else Color.Transparent
             ) {
-                Text(it, Modifier.padding(5.dp))
+                Text(it, Modifier.padding(5.dp).fillMaxWidth(0.5f))
             }
         }
     }

@@ -63,7 +63,9 @@ fun Workspace(state: WorkspaceState, onRequestCompletions: (state: TabState, que
             }
 
             val tabState = state.activeTabState()
-            Editor(tabState!!.editorState, onRequestCompletions = { onRequestCompletions(tabState, it) })
+            Editor(tabState!!.editorState,
+                Modifier.padding(10.dp),
+                onRequestCompletions = { onRequestCompletions(tabState, it) })
         }
     } else {
         Row(

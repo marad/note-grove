@@ -1,5 +1,8 @@
 package editor
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.text.TextFieldScrollState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.text.coerceIn
@@ -10,6 +13,8 @@ class EditorState(content: String = "") {
     private val content = mutableStateOf(TextFieldValue(content))
     val focusRequester = FocusRequester()
     val completionsState = CompletionsState()
+    @OptIn(ExperimentalFoundationApi::class)
+    val scrollState = TextFieldScrollState(Orientation.Vertical)
 
     fun markDirty() {
         dirty.value = true
