@@ -1,6 +1,5 @@
 package editor
 
-import Markdown
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.text.coerceIn
@@ -8,7 +7,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 
 class EditorState(content: String = "") {
     val dirty = mutableStateOf(false)
-    private val content = mutableStateOf(TextFieldValue(Markdown.parse(content).toAnnotatedString()))
+    private val content = mutableStateOf(TextFieldValue(content))
     val focusRequester = FocusRequester()
     val completionsState = CompletionsState()
 
@@ -32,9 +31,7 @@ class EditorState(content: String = "") {
         if (markDirty && content.value.text != newContent.text) {
             markDirty()
         }
-        // TODO: highlighting should be done as visual transformation
-        val md = Markdown.parse(newContent.text)
-        content.value = newContent.copy(md.toAnnotatedString())
+        content.value = newContent
     }
 
     fun replace(start: Int, end: Int, text: String) {

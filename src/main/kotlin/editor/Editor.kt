@@ -1,5 +1,6 @@
 package editor
 
+import Markdown
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.runtime.*
@@ -8,7 +9,8 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.getTextBeforeSelection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -77,7 +79,10 @@ fun Editor(state: EditorState, onRequestCompletions: (String) -> List<String> = 
                 fontFamily = editorFont,
                 fontSize = 16.sp
             ),
-            visualTransformation = VisualTransformation.None,
+            visualTransformation = { text ->
+                val highlighted = Markdown.parse(text.text).toAnnotatedString()
+                TransformedText(highlighted, OffsetMapping.Identity)
+            },
         )
 
         if (state.completionsState.isVisible()) {
