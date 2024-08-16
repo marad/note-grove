@@ -119,7 +119,7 @@ fun ActionLauncher(state: LauncherState,
 @Composable
 fun ActionItem(action: Action,
                highlighted: Boolean = false,
-               backgroundColor: Color = Color.White,
+               backgroundColor: Color = MaterialTheme.colors.surface,
                highlightedBackground: Color = MaterialTheme.colors.secondary,
                modifier: Modifier = Modifier) {
     Card(modifier,
@@ -128,7 +128,7 @@ fun ActionItem(action: Action,
         Column(Modifier.padding(5.dp)) {
             Text(action.name, fontSize = 18.sp)
             if (action.description != null) {
-                Text(action.description, fontSize = 12.sp, color = Color.LightGray)
+                Text(action.description, fontSize = 12.sp)
             }
         }
     }

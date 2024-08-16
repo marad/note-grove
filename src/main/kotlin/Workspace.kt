@@ -10,6 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import editor.Editor
+import editor.EditorState
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.exists
@@ -46,7 +48,7 @@ class WorkspaceState {
 
 @Composable
 @Preview
-fun Workspace(state: WorkspaceState) {
+fun Workspace(state: WorkspaceState, onRequestCompletions: (state: TabState, query: String) -> List<String> = { _,_ -> emptyList() }) {
     if (state.tabs.isNotEmpty()) {
         Column {
             ScrollableTabRow(
@@ -61,7 +63,7 @@ fun Workspace(state: WorkspaceState) {
             }
 
             val tabState = state.activeTabState()
-            Editor(tabState!!.editorState)
+            Editor(tabState!!.editorState, onRequestCompletions = { onRequestCompletions(tabState, it) })
         }
     } else {
         Row(

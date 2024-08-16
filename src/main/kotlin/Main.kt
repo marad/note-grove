@@ -30,7 +30,7 @@ class AppState {
 
 @Composable
 @Preview
-fun App(state: AppState) {
+fun App(state: AppState, onRequestCompletions: (tabState: TabState, query: String) -> List<String> = { _,_ -> emptyList() }) {
 
     Row(Modifier.fillMaxSize()) {
         ToolBar(
@@ -48,7 +48,7 @@ fun App(state: AppState) {
             color = Color.LightGray,
         )
 
-        Workspace(state.workspaceState)
+        Workspace(state.workspaceState, onRequestCompletions = onRequestCompletions)
     }
 
 }
@@ -159,7 +159,9 @@ fun SearchDialog(state: SearchDialogState, onSearchActions: (String) -> List<Act
 }
 
 fun main() = application {
-    val vault = Vault("/home/marad/dendron/notes/")
+    val vaultPath = Path.of("").resolve("test-vault").toAbsolutePath().toString()
+
+    val vault = Vault(vaultPath.toString())
     val appState = remember { AppState() }
     val shortcuts = Shortcuts()
 
@@ -182,7 +184,9 @@ fun main() = application {
         onCloseRequest = ::exitApplication) {
 
         MaterialTheme {
-            App(appState)
+            App(appState, onRequestCompletions = { tab, query ->
+                vault.searchFiles(query)
+            })
 
             if (appState.searchDialogState.isVisible()) {
                 SearchDialog(appState.searchDialogState,
