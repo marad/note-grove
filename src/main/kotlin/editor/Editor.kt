@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.OffsetMapping
@@ -34,8 +35,7 @@ fun Editor(vm: EditorViewModel = viewModel { EditorViewModel() },
            onTextLayout: (TextLayoutResult) -> Unit = {},
            onRequestCompletions: (String) -> List<String> = { emptyList() }) {
     val state by vm.state.collectAsState()
-    val layout = remember { mutableStateOf<TextLayoutResult?>(null) }
-    val lay = layout.value
+    val layout = vm.layout
     Box(modifier) {
         BasicTextField(
             value = state.content,
@@ -69,7 +69,7 @@ fun Editor(vm: EditorViewModel = viewModel { EditorViewModel() },
                         if (it.key == Key.Tab && it.type == KeyEventType.KeyDown) {
                             vm.completionsState.getSelected()?.let {
                                 val startOffset = vm.completionsState.getStartOffset()
-                                vm.replace(startOffset, state.content.selection.end, it)
+                                vm.replace(TextRange(startOffset, state.content.selection.end), "$it]]")
                             }
                             vm.completionsState.hide()
                             return@onPreviewKeyEvent true
@@ -97,17 +97,17 @@ fun Editor(vm: EditorViewModel = viewModel { EditorViewModel() },
                 TransformedText(highlighted, OffsetMapping.Identity)
             },
             onTextLayout = {
-                layout.value = it
+                vm.layout = it
                 onTextLayout(it)
             }
         )
 
 
         if (vm.completionsState.isVisible()) {
-            if (lay != null) {
+            if (layout != null) {
                 val offset = state.content.selection.start
-                val left = lay.getHorizontalPosition(offset, true)
-                val top = lay.getLineBottom(lay.getLineForOffset(offset))
+                val left = layout.getHorizontalPosition(offset, true)
+                val top = layout.getLineBottom(layout.getLineForOffset(offset))
                 Completions(
                     vm.completionsState,
                     Modifier.offset((left / 2).dp, (top / 2).dp)
