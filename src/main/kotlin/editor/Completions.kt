@@ -2,7 +2,7 @@ package editor
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
@@ -53,10 +53,12 @@ fun Completions(state: CompletionsState, modifier: Modifier = Modifier) {
         .padding(5.dp))
     {
         state.getItems().forEachIndexed { index, it ->
-            Surface(
-                color = if (state.isSelected(index)) MaterialTheme.colors.secondary else Color.Transparent
-            ) {
-                Text(it, Modifier.padding(5.dp).fillMaxWidth(0.5f))
+            Row {
+                Surface(
+                    color = if (state.isSelected(index)) MaterialTheme.colors.secondary else Color.Transparent,
+                ) {
+                    Text(it, Modifier.padding(5.dp))
+                }
             }
         }
     }

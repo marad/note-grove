@@ -11,7 +11,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import editor.Editor
-import editor.EditorState
+import editor.EditorViewModel
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.exists
@@ -63,7 +63,7 @@ fun Workspace(state: WorkspaceState, onRequestCompletions: (state: TabState, que
             }
 
             val tabState = state.activeTabState()
-            Editor(tabState!!.editorState,
+            Editor(tabState!!.editorViewModel,
                 Modifier.padding(10.dp),
                 onRequestCompletions = { onRequestCompletions(tabState, it) })
         }
@@ -88,7 +88,7 @@ fun Workspace(state: WorkspaceState, onRequestCompletions: (state: TabState, que
 
 class TabState(title: String = "<unknown>", val file: Path) {
     val title = mutableStateOf(title)
-    val editorState = EditorState(readContentIfExists())
+    val editorViewModel = EditorViewModel(readContentIfExists())
 
     fun updateTitle(newTitle: String) {
         title.value = newTitle
@@ -108,13 +108,16 @@ fun WorkspaceTab(state: TabState,
                  selected: Boolean,
                  onClick: () -> Unit = {},
                  onClose: () -> Unit = {}) {
+
+    val editorState by state.editorViewModel.state.collectAsState()
+
     Tab(
         text = {
             Row {
                 Text(state.title.value, Modifier
                     .align(Alignment.CenterVertically)
                 )
-                if (state.editorState.isDirty()) {
+                if (editorState.dirty) {
                     Text("*", Modifier.align(Alignment.CenterVertically))
                 }
                 Spacer(Modifier.width(10.dp))

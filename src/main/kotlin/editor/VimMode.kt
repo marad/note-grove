@@ -56,7 +56,7 @@ interface VimAction {
     fun perform(range: TextRange, text: String): String
 }
 
-class VimCommandHandler(private val editor: EditorState) {
+class VimCommandHandler() {
     fun onKey(event: KeyEvent): Boolean {
         if (event.key == Key.J && event.type == KeyEventType.KeyDown) {
             // TODO: move cursor down
@@ -68,23 +68,25 @@ class VimCommandHandler(private val editor: EditorState) {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun VimMode(editorState: EditorState,
-            vm: VimModeViewModel = viewModel { VimModeViewModel() },
+fun VimMode(vm: VimModeViewModel = viewModel { VimModeViewModel() },
             modifier: Modifier = Modifier,
             onRequestCompletions: (String) -> List<String> = { emptyList() }) {
 
+    val editorViewModel = remember { EditorViewModel("This is a **test**") }
     val state by vm.state.collectAsState()
-    val handler = remember { VimCommandHandler(editorState) }
+    val handler = remember { VimCommandHandler() }
     val layout = remember { mutableStateOf<TextLayoutResult?>(null) }
     val color = MaterialTheme.colors.secondary
     val lay = layout.value
 
+    val editorState by editorViewModel.state.collectAsState()
+
     Box(modifier
         .onPreviewKeyEvent(handler::onKey) ) {
         if (lay != null && state.mode == Mode.Normal) {
-            val offset = editorState.getContent().selection.start.coerceAtMost(editorState.getContent().text.length-1)
+            val offset = editorState.content.selection.start.coerceAtMost(editorState.content.text.length-1)
             val rect = lay.getBoundingBox(offset)
-            val top = rect.top - editorState.scrollState.offset
+            val top = rect.top - editorViewModel.scrollState.offset
             val left = rect.left
             var width = rect.width
             val height = rect.height
@@ -106,7 +108,7 @@ fun VimMode(editorState: EditorState,
         }
         Row(Modifier.fillMaxSize()) {
             Editor(
-                editorState,
+                editorViewModel,
                 onTextLayout = { layout.value = it },
                 onRequestCompletions = onRequestCompletions,
                 cursorBrush = if (state.mode == Mode.Insert) SolidColor(Color.Black) else SolidColor(Color.Transparent),
@@ -126,6 +128,5 @@ fun VimMode(editorState: EditorState,
 }
 
 fun main() = singleWindowApplication {
-    val editorState = EditorState("Hello World\nThis *is* a test")
-    VimMode(editorState)
+    VimMode()
 }
