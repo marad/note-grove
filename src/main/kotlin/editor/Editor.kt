@@ -3,7 +3,6 @@ package editor
 import Markdown
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.runtime.Composable
@@ -65,7 +64,6 @@ fun Editor(state: EditorState,
                 state.updateContent(it)
             },
             modifier = Modifier
-                .fillMaxSize()
                 .onPreviewKeyEvent {
                     if (state.completionsState.isVisible()) {
                         if (it.key == Key.Escape && it.type == KeyEventType.KeyDown) {

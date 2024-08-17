@@ -12,6 +12,7 @@
 - formatting options bubble after select
 - scrollbar
 - openning already opened file should just switch to it
+- watching the opened file
 
 # Actions
 - ~~create actions and shortcut system~~
