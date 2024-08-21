@@ -179,7 +179,6 @@ fun VimMode(vm: VimModeViewModel = viewModel { VimModeViewModel(EditorViewModel(
                 onTextLayout = { layout.value = it },
                 onRequestCompletions = onRequestCompletions,
                 cursorBrush = if (state.mode == Mode.Insert) SolidColor(Color.Black) else SolidColor(Color.Transparent),
-                //modifier = Modifier.fillMaxSize()
             )
         }
     }
