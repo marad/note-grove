@@ -10,8 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import editor.Editor
-import editor.EditorViewModel
+import editor.*
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.exists
@@ -62,10 +61,18 @@ fun Workspace(state: WorkspaceState, onRequestCompletions: (state: TabState, que
                 }
             }
 
-            val tabState = state.activeTabState()
-            Editor(tabState!!.editorViewModel,
-                Modifier.padding(10.dp),
-                onRequestCompletions = { onRequestCompletions(tabState, it) })
+            val tabState = state.activeTabState()!!
+
+
+            if (tabState.vimMode) {
+                VimMode(tabState.vimModeViewModel,
+                    Modifier.padding(10.dp),
+                    onRequestCompletions = { onRequestCompletions(tabState, it) })
+            } else {
+                Editor(tabState.editorViewModel,
+                    Modifier.padding(10.dp),
+                    onRequestCompletions = { onRequestCompletions(tabState, it) })
+            }
         }
     } else {
         Row(
@@ -86,9 +93,10 @@ fun Workspace(state: WorkspaceState, onRequestCompletions: (state: TabState, que
     }
 }
 
-class TabState(title: String = "<unknown>", val file: Path) {
+class TabState(title: String = "<unknown>", val file: Path, val vimMode: Boolean = true) {
     val title = mutableStateOf(title)
     val editorViewModel = EditorViewModel(readContentIfExists())
+    val vimModeViewModel = VimModeViewModel(editorViewModel)
 
     fun updateTitle(newTitle: String) {
         title.value = newTitle

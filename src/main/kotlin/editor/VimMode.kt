@@ -5,9 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.text.isTypedEvent
-import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -38,10 +36,9 @@ data class VimModeState(
     val mode: Mode = Mode.Normal
 )
 
-class VimModeViewModel : ViewModel() {
+class VimModeViewModel(val editorViewModel: EditorViewModel) : ViewModel() {
     private val _state = MutableStateFlow(VimModeState())
     val state = _state.asStateFlow()
-    val editorViewModel = EditorViewModel("Hello World\nThis *is* sparta!")
     private var consumeNextKeyTyped = false
 
     fun switchMode(mode: Mode) {
@@ -139,7 +136,7 @@ interface VimAction {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun VimMode(vm: VimModeViewModel = viewModel { VimModeViewModel() },
+fun VimMode(vm: VimModeViewModel = viewModel { VimModeViewModel(EditorViewModel("This is **sparta**!")) },
             modifier: Modifier = Modifier,
             onRequestCompletions: (String) -> List<String> = { emptyList() }) {
 
@@ -184,27 +181,6 @@ fun VimMode(vm: VimModeViewModel = viewModel { VimModeViewModel() },
                 cursorBrush = if (state.mode == Mode.Insert) SolidColor(Color.Black) else SolidColor(Color.Transparent),
                 //modifier = Modifier.fillMaxSize()
             )
-            Button(onClick = {
-                if (state.mode == Mode.Normal) {
-                    vm.switchMode(Mode.Insert)
-                } else {
-                    vm.switchMode(Mode.Normal)
-                }
-            }) {
-                Text("Toggle mode")
-            }
-            Button(onClick = { vm.editorViewModel.moveCaretUp() }) {
-                Text("Up")
-            }
-            Button(onClick = { vm.editorViewModel.moveCaretDown() }) {
-                Text("Down")
-            }
-            Button(onClick = { vm.editorViewModel.moveCaretLeft() }) {
-                Text("Left")
-            }
-            Button(onClick = { vm.editorViewModel.moveCaretRight() }) {
-                Text("Right")
-            }
         }
     }
 }

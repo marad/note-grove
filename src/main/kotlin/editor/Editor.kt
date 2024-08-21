@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.*
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
@@ -108,9 +109,10 @@ fun Editor(vm: EditorViewModel = viewModel { EditorViewModel() },
                 val offset = state.content.selection.start
                 val left = layout.getHorizontalPosition(offset, true)
                 val top = layout.getLineBottom(layout.getLineForOffset(offset))
+                val density = LocalDensity.current.density
                 Completions(
                     vm.completionsState,
-                    Modifier.offset((left / 2).dp, (top / 2).dp)
+                    Modifier.offset((left / density).dp, (top / density).dp)
                 )
             }
         }
