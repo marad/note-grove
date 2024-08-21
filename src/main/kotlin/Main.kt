@@ -13,13 +13,13 @@ import androidx.compose.material.icons.sharp.Search
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.key.*
-import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.*
+import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowState
+import androidx.compose.ui.window.application
 import java.nio.file.Path
 
 
@@ -122,40 +122,6 @@ fun FileList() {
 
         }
     }
-}
-
-class SearchDialogState {
-    private val visible = mutableStateOf(false)
-    val actionLauncherState = LauncherState()
-
-    fun showWithPrefix(prefix: String) {
-        show()
-        actionLauncherState.text.value = TextFieldValue(prefix, TextRange(prefix.length))
-    }
-    fun show() { visible.value = true}
-    fun hide() { visible.value = false }
-    fun isVisible() = visible.value
-
-}
-
-@Composable
-fun SearchDialog(state: SearchDialogState, onSearchActions: (String) -> List<Action>) {
-    Dialog(
-        onDismissRequest = { state.hide() },
-    ) {
-        ActionLauncher(state.actionLauncherState,
-            onSearchChange = { name ->
-                state.actionLauncherState.actions.clear()
-                state.actionLauncherState.actions.addAll(onSearchActions(name))
-            },
-            onComplete = { action ->
-                state.hide()
-                action.call()
-            },
-            onCancel = { state.hide() }
-        )
-    }
-
 }
 
 fun main() = application {
