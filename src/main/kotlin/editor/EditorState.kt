@@ -19,11 +19,11 @@ data class EditorState(
 )
 
 @OptIn(ExperimentalFoundationApi::class)
-class EditorViewModel(content: String = "") : ViewModel() {
+class EditorViewModel(content: String = "", isDirty: Boolean = false) : ViewModel() {
     private val _state = MutableStateFlow(
         EditorState(
             TextFieldValue(content),
-            dirty = false,
+            dirty = isDirty,
         )
     )
     val state = _state.asStateFlow()

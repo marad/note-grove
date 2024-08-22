@@ -1,38 +1,59 @@
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
-class SearchDialogState {
-    private val visible = mutableStateOf(false)
-    val actionLauncherState = LauncherState()
+
+data class SearchDialogState(
+    val visible: Boolean = false,
+    val actionLauncherState: LauncherState = LauncherState()
+)
+
+class SearchDialogViewModel : ViewModel() {
+    private val _state = MutableStateFlow((SearchDialogState()))
+    val state = _state.asStateFlow()
+    var onSearchActions: (String) -> List<Action> = { emptyList() }
 
     fun showWithPrefix(prefix: String) {
+        state.value.actionLauncherState.text.value = TextFieldValue(prefix, TextRange(prefix.length))
+        search(prefix)
         show()
-        actionLauncherState.text.value = TextFieldValue(prefix, TextRange(prefix.length))
     }
-    fun show() { visible.value = true}
-    fun hide() { visible.value = false }
-    fun isVisible() = visible.value
+    fun show() {
+        search(state.value.actionLauncherState.text.value.text)
+        _state.value = state.value.copy(visible = true)
+    }
+    fun hide() { _state.value = state.value.copy(visible = false) }
+    fun isVisible() = _state.value.visible
 
+    fun search(query: String) {
+        state.value.actionLauncherState.actions.clear()
+        state.value.actionLauncherState.actions.addAll(onSearchActions(query))
+    }
 }
 
+
 @Composable
-fun SearchDialog(state: SearchDialogState, onSearchActions: (String) -> List<Action>) {
+fun SearchDialog(vm: SearchDialogViewModel) {
+    val state by vm.state.collectAsState()
+
+    if (!state.visible) return
+
     Dialog(
-        onDismissRequest = { state.hide() },
+        onDismissRequest = { vm.hide() },
     ) {
         ActionLauncher(state.actionLauncherState,
-            onSearchChange = { name ->
-                state.actionLauncherState.actions.clear()
-                state.actionLauncherState.actions.addAll(onSearchActions(name))
-            },
+            onSearchChange = vm::search,
             onComplete = { action ->
-                state.hide()
+                vm.hide()
                 action.call()
             },
-            onCancel = { state.hide() }
+            onCancel = { vm.hide() }
         )
     }
 

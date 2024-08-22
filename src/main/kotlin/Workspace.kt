@@ -14,6 +14,7 @@ import editor.*
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.exists
+import kotlin.io.path.notExists
 
 class WorkspaceState {
     val tabIndex = mutableIntStateOf(0)
@@ -95,7 +96,7 @@ fun Workspace(state: WorkspaceState, onRequestCompletions: (state: TabState, que
 
 class TabState(title: String = "<unknown>", val file: Path, val vimMode: Boolean = false, defaultContent: String = "") {
     val title = mutableStateOf(title)
-    val editorViewModel = EditorViewModel(readContentIfExists(defaultContent))
+    val editorViewModel = EditorViewModel(readContentIfExists(defaultContent), file.notExists())
     val vimModeViewModel = VimModeViewModel(editorViewModel)
 
     fun updateTitle(newTitle: String) {

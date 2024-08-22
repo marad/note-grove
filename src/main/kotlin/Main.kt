@@ -28,13 +28,16 @@ import java.nio.file.Path
 
 class AppState {
     val workspaceState = WorkspaceState()
-    val searchDialogState = SearchDialogState()
 }
 
-class AppViewModel(appState: AppState = AppState(), val vault: Vault) : ViewModel() {
+class AppViewModel(
+    appState: AppState = AppState(),
+    val vault: Vault,
+    val inputDialogViewModel: InputDialogViewModel = InputDialogViewModel(),
+    val searchDialogViewModel: SearchDialogViewModel = SearchDialogViewModel()
+) : ViewModel() {
     private val _state = MutableStateFlow(appState)
     val state = _state.asStateFlow()
-    val inputDialogViewModel = InputDialogViewModel()
 }
 
 @Composable
@@ -139,14 +142,19 @@ fun main() = application {
     val vaultPath = Path.of("").resolve("test-vault").toAbsolutePath().toString()
 
     val vault = Vault(vaultPath)
-    val appVm = remember { AppViewModel(vault = vault) }
+    val appVm = remember {
+        AppViewModel(
+            vault = vault,
+            searchDialogViewModel = SearchDialogViewModel()
+        )
+    }
     val shortcuts = Shortcuts()
 
     val appState by appVm.state.collectAsState()
 
     val saveAction = createSaveAction(appState)
-    val showSearchDialog = createSearchNoteAction(appState)
-    val showActionSearchDialog = createSearchActionsAction(appState)
+    val showSearchDialog = createSearchNoteAction(appVm)
+    val showActionSearchDialog = createSearchActionsAction(appVm)
     val closeTabAction = createCloseTabAction(appState)
     val newNoteAction = newNoteAction(appVm)
 
@@ -159,6 +167,21 @@ fun main() = application {
 
     val appActions = listOf(saveAction, showSearchDialog, closeTabAction, newNoteAction)
 
+    appVm.searchDialogViewModel.onSearchActions = { name ->
+        if (name.startsWith(">")) {
+            val searchTerm = name.drop(1).trim()
+            appActions.filter {
+                it.name.contains(searchTerm) ||
+                        (it.description?.contains(searchTerm) ?: false)
+            }
+        } else {
+            vault.searchFiles(name).map {
+                Action(it) {
+                    appState.workspaceState.addTab(it, vault.pathToFile(it))
+                }
+            }
+        }
+    }
 
     Window(
         title = "Note Grove",
@@ -175,24 +198,7 @@ fun main() = application {
 
             InputDialog(appVm.inputDialogViewModel)
 
-            if (appState.searchDialogState.isVisible()) {
-                SearchDialog(appState.searchDialogState,
-                    onSearchActions = { name ->
-                        if (name.startsWith(">")) {
-                            val searchTerm = name.drop(1).trim()
-                            appActions.filter {
-                                it.name.contains(searchTerm) ||
-                                        (it.description?.contains(searchTerm) ?: false)
-                            }
-                        } else {
-                            vault.searchFiles(name).map {
-                                Action(it) {
-                                    appState.workspaceState.addTab(it, vault.pathToFile(it))
-                                }
-                            }
-                        }
-                    })
-            }
+            SearchDialog(appVm.searchDialogViewModel)
         }
     }
 }

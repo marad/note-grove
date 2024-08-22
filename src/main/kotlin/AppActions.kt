@@ -1,14 +1,14 @@
 import com.vladsch.flexmark.util.ast.NodeVisitor
 import java.nio.file.Files
 
-fun createSearchNoteAction(appState: AppState): Action =
+fun createSearchNoteAction(appVm: AppViewModel): Action =
     Action("Search note", "Shows search note dialog") {
-        appState.searchDialogState.showWithPrefix("")
+        appVm.searchDialogViewModel.showWithPrefix("")
     }
 
-fun createSearchActionsAction(appState: AppState): Action =
+fun createSearchActionsAction(appVm: AppViewModel): Action =
     Action("Search actions", "Shows search actions dialog") {
-        appState.searchDialogState.showWithPrefix("> ")
+        appVm.searchDialogViewModel.showWithPrefix("> ")
     }
 
 fun createCloseTabAction(appState: AppState): Action =
