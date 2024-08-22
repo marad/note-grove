@@ -57,3 +57,27 @@ fun newNoteAction(appVm: AppViewModel): Action =
         }
 
     }
+
+
+fun createDeleteAction(appVm: AppViewModel): Action =
+    Action("Delete", "Deletes current file") {
+        // get current note name
+        val activeTab = appVm.state.value.workspaceState.activeTabState()
+        val question = activeTab?.title?.value?.let {
+            "Are you sure that you want to delete $it?"
+        } ?: "Are you sure that you want to delete this note?"
+
+        appVm.confirmDialogViewModel.show(
+            question = question,
+            onConfirm = {
+                activeTab?.file?.let {
+                    Files.deleteIfExists(it)
+                    appVm.state.value.workspaceState.closeActiveTab()
+                }
+            },
+            onCancel = {
+                // do nothing
+            }
+        )
+
+    }

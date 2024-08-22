@@ -34,7 +34,8 @@ class AppViewModel(
     appState: AppState = AppState(),
     val vault: Vault,
     val inputDialogViewModel: InputDialogViewModel = InputDialogViewModel(),
-    val searchDialogViewModel: SearchDialogViewModel = SearchDialogViewModel()
+    val searchDialogViewModel: SearchDialogViewModel = SearchDialogViewModel(),
+    val confirmDialogViewModel: ConfirmDialogViewModel = ConfirmDialogViewModel(),
 ) : ViewModel() {
     private val _state = MutableStateFlow(appState)
     val state = _state.asStateFlow()
@@ -157,6 +158,7 @@ fun main() = application {
     val showActionSearchDialog = createSearchActionsAction(appVm)
     val closeTabAction = createCloseTabAction(appState)
     val newNoteAction = newNoteAction(appVm)
+    val deleteNoteAction = createDeleteAction(appVm)
 
     shortcuts.add(Shortcut(Key.P, KeyModifier.Ctrl), showSearchDialog)
     shortcuts.add(Shortcut(Key.P, KeyModifier.Ctrl, KeyModifier.Shift), showActionSearchDialog)
@@ -165,7 +167,8 @@ fun main() = application {
     shortcuts.add(Shortcut(Key.N, KeyModifier.Ctrl), newNoteAction)
 
 
-    val appActions = listOf(saveAction, showSearchDialog, closeTabAction, newNoteAction)
+    val appActions = listOf(saveAction, showSearchDialog, closeTabAction, newNoteAction, deleteNoteAction)
+
 
     appVm.searchDialogViewModel.onSearchActions = { name ->
         if (name.startsWith(">")) {
@@ -197,8 +200,8 @@ fun main() = application {
             }
 
             InputDialog(appVm.inputDialogViewModel)
-
             SearchDialog(appVm.searchDialogViewModel)
+            ConfirmDialog(appVm.confirmDialogViewModel)
         }
     }
 }

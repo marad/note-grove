@@ -39,21 +39,23 @@ class SearchDialogViewModel : ViewModel() {
 
 
 @Composable
-fun SearchDialog(vm: SearchDialogViewModel) {
+fun SearchDialog(vm: SearchDialogViewModel,
+                 onCompletion: (Action) -> Unit = {
+                     vm.hide()
+                     it.call()
+                 },
+                 onDismissRequest: () -> Unit = { vm.hide() }) {
     val state by vm.state.collectAsState()
 
     if (!state.visible) return
 
     Dialog(
-        onDismissRequest = { vm.hide() },
+        onDismissRequest = onDismissRequest,
     ) {
         ActionLauncher(state.actionLauncherState,
             onSearchChange = vm::search,
-            onComplete = { action ->
-                vm.hide()
-                action.call()
-            },
-            onCancel = { vm.hide() }
+            onComplete = onCompletion,
+            onCancel = onDismissRequest
         )
     }
 
