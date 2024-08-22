@@ -21,7 +21,8 @@ import kotlinx.coroutines.flow.asStateFlow
 
 data class InputDialogState(
     val text: TextFieldValue,
-    val visible: Boolean = false
+    val visible: Boolean = false,
+    val onAccept: (String) -> Unit = {},
 )
 
 class InputDialogViewModel(
@@ -39,8 +40,14 @@ class InputDialogViewModel(
         _state.value = _state.value.copy(text = text)
     }
 
-    fun show() {
-        _state.value = _state.value.copy(visible = true)
+    fun show(initialText: String? = null, onAccept: (String) -> Unit = {}) {
+        val text = if (initialText != null) {
+            TextFieldValue(initialText, selection = TextRange(initialText.length))
+        } else {
+            _state.value.text
+        }
+
+        _state.value = _state.value.copy(visible = true, text = text, onAccept = onAccept)
     }
 
     fun hide() {
@@ -61,7 +68,6 @@ class InputDialogViewModel(
 fun InputDialog(
     viewModel: InputDialogViewModel,
     modifier: Modifier = Modifier,
-    onAccept: (String) -> Unit = { },
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -80,7 +86,7 @@ fun InputDialog(
                             .onPreviewKeyEvent { event ->
                                 if (event.key == Key.Enter) {
                                     if (event.type == KeyEventType.KeyDown) {
-                                        onAccept(state.text.text)
+                                        state.onAccept(state.text.text)
                                         viewModel.hide()
                                     }
                                     return@onPreviewKeyEvent true
@@ -102,9 +108,7 @@ fun main() =
     singleWindowApplication {
         Column {
             val model = InputDialogViewModel("my.important.note")
-            InputDialog(model, onAccept = { text ->
-                println("Accepted: $text")
-            })
+            InputDialog(model)
             model.show()
 
         }

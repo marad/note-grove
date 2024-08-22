@@ -19,8 +19,8 @@ class WorkspaceState {
     val tabIndex = mutableIntStateOf(0)
     val tabs = mutableStateListOf<TabState>()
 
-    fun addTab(title: String, file: Path, activateNewTab: Boolean = true) {
-        tabs.add(TabState(title, file))
+    fun addTab(title: String, file: Path, activateNewTab: Boolean = true, defaultContent: String = "") {
+        tabs.add(TabState(title, file, defaultContent = defaultContent))
         if (activateNewTab) {
             setActiveTab(tabs.size - 1)
         }
@@ -93,20 +93,20 @@ fun Workspace(state: WorkspaceState, onRequestCompletions: (state: TabState, que
     }
 }
 
-class TabState(title: String = "<unknown>", val file: Path, val vimMode: Boolean = true) {
+class TabState(title: String = "<unknown>", val file: Path, val vimMode: Boolean = false, defaultContent: String = "") {
     val title = mutableStateOf(title)
-    val editorViewModel = EditorViewModel(readContentIfExists())
+    val editorViewModel = EditorViewModel(readContentIfExists(defaultContent))
     val vimModeViewModel = VimModeViewModel(editorViewModel)
 
     fun updateTitle(newTitle: String) {
         title.value = newTitle
     }
 
-    private fun readContentIfExists(): String =
+    private fun readContentIfExists(defaultContent: String): String =
         if (file.exists()) {
             Files.readString(file)
         } else {
-            ""
+            defaultContent
         }
 }
 

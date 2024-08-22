@@ -20,6 +20,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
+import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import java.nio.file.Path
 
 
@@ -28,9 +31,17 @@ class AppState {
     val searchDialogState = SearchDialogState()
 }
 
+class AppViewModel(appState: AppState = AppState(), val vault: Vault) : ViewModel() {
+    private val _state = MutableStateFlow(appState)
+    val state = _state.asStateFlow()
+    val inputDialogViewModel = InputDialogViewModel()
+}
+
 @Composable
 @Preview
-fun App(state: AppState, onRequestCompletions: (tabState: TabState, query: String) -> List<String> = { _,_ -> emptyList() }) {
+fun App(appVm: AppViewModel, onRequestCompletions: (tabState: TabState, query: String) -> List<String> = { _,_ -> emptyList() }) {
+
+    val state by appVm.state.collectAsState()
 
     Row(Modifier.fillMaxSize()) {
         ToolBar(
@@ -127,21 +138,27 @@ fun FileList() {
 fun main() = application {
     val vaultPath = Path.of("").resolve("test-vault").toAbsolutePath().toString()
 
-    val vault = Vault(vaultPath.toString())
-    val appState = remember { AppState() }
+    val vault = Vault(vaultPath)
+    val appVm = remember { AppViewModel(vault = vault) }
     val shortcuts = Shortcuts()
+
+    val appState by appVm.state.collectAsState()
 
     val saveAction = createSaveAction(appState)
     val showSearchDialog = createSearchNoteAction(appState)
     val showActionSearchDialog = createSearchActionsAction(appState)
     val closeTabAction = createCloseTabAction(appState)
+    val newNoteAction = newNoteAction(appVm)
 
     shortcuts.add(Shortcut(Key.P, KeyModifier.Ctrl), showSearchDialog)
     shortcuts.add(Shortcut(Key.P, KeyModifier.Ctrl, KeyModifier.Shift), showActionSearchDialog)
     shortcuts.add(Shortcut(Key.S, KeyModifier.Ctrl), saveAction)
     shortcuts.add(Shortcut(Key.W, KeyModifier.Ctrl), closeTabAction)
+    shortcuts.add(Shortcut(Key.N, KeyModifier.Ctrl), newNoteAction)
 
-    val appActions = listOf(saveAction, showSearchDialog, closeTabAction)
+
+    val appActions = listOf(saveAction, showSearchDialog, closeTabAction, newNoteAction)
+
 
     Window(
         title = "Note Grove",
@@ -149,10 +166,14 @@ fun main() = application {
         onPreviewKeyEvent = shortcuts::handle,
         onCloseRequest = ::exitApplication) {
 
-        MaterialTheme {
-            App(appState, onRequestCompletions = { tab, query ->
-                vault.searchFiles(query)
-            })
+        MaterialTheme(colors = lightColors(primary = Color(0.2f, 0.6f, 0.2f))) {
+            Surface {
+                App(appVm, onRequestCompletions = { tab, query ->
+                    vault.searchFiles(query)
+                })
+            }
+
+            InputDialog(appVm.inputDialogViewModel)
 
             if (appState.searchDialogState.isVisible()) {
                 SearchDialog(appState.searchDialogState,

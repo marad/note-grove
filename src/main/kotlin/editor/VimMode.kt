@@ -151,8 +151,8 @@ fun VimMode(vm: VimModeViewModel = viewModel { VimModeViewModel(EditorViewModel(
     Box(modifier
         .onPreviewKeyEvent(vm::handleKey) ) {
         if (lay != null && state.mode == Mode.Normal) {
-            val offset = editorState.content.selection.start.coerceAtMost(editorState.content.text.length-1)
-            val rect = lay.getBoundingBox(offset)
+            val offset = editorState.content.selection.start.coerceIn(0, (editorState.content.text.length-1).coerceAtLeast(0))
+            val rect =  lay.getBoundingBox(offset)
             val top = rect.top - editorViewModel.scrollState.offset
             val left = rect.left
             var width = rect.width

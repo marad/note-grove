@@ -35,3 +35,25 @@ fun createSaveAction(appState: AppState): Action =
             tab.editorViewModel.clearDirty()
         }
     }
+
+
+fun newNoteAction(appVm: AppViewModel): Action =
+    Action("New note", "Creates a new note") {
+        val activeTab = appVm.state.value.workspaceState.activeTabState()
+        val title = activeTab?.title?.value
+        appVm.inputDialogViewModel.show(title ?: "") { title ->
+            val path = appVm.vault.pathToFile(title)
+            val content = """
+                |---
+                |title: $title
+                |description: ''
+                |created: ${System.currentTimeMillis()}
+                |updated: ${System.currentTimeMillis()}
+                |---
+                |
+                |
+            """.trimMargin()
+            appVm.state.value.workspaceState.addTab(title, path, defaultContent = content)
+        }
+
+    }
