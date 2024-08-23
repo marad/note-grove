@@ -5,6 +5,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.unit.sp
 import com.vladsch.flexmark.ast.*
 import com.vladsch.flexmark.ext.wikilink.WikiLink
@@ -12,157 +13,129 @@ import com.vladsch.flexmark.ext.yaml.front.matter.YamlFrontMatterBlock
 import com.vladsch.flexmark.util.ast.Document
 import com.vladsch.flexmark.util.ast.NodeVisitor
 import com.vladsch.flexmark.util.ast.VisitHandler
+import kotlin.math.max
 
 private val grayedOut = SpanStyle(color = Color.LightGray)
-fun Document.toAnnotatedString(): AnnotatedString {
+
+
+fun Document.highlighted(): AnnotatedString {
     val ann = AnnotatedString.Builder()
     var lastOffset = 0
-    fun appendPrevious(startOffset: Int) {
-        ann.append(document.chars.substring(lastOffset, startOffset))
+    fun appendUntil(until: Int) {
+        val endIndex = until.coerceAtMost(document.chars.length)
+        ann.append(document.chars.substring(lastOffset, endIndex))
+        lastOffset = endIndex
     }
 
-
     val visitor = NodeVisitor()
+
     visitor.addHandlers(listOf(
         VisitHandler(YamlFrontMatterBlock::class.java) {
-            appendPrevious(it.startOffset)
+            appendUntil(it.startOffset)
+            ann.pushStyle(SpanStyle(fontSize = 12.sp))
             ann.pushStyle(grayedOut)
-            ann.append(it.chars)
+            appendUntil(it.chars.endOffset)
             ann.pop()
-            lastOffset = it.endOffset
+            ann.pop()
         },
         VisitHandler(Emphasis::class.java) {
-            appendPrevious(it.startOffset)
-            ann.pushStyle(grayedOut)
-            ann.append(it.openingMarker)
-            ann.pop()
+            appendUntil(it.startOffset)
             ann.pushStyle(SpanStyle(fontStyle = FontStyle.Italic))
-            ann.append(it.childChars)
+            visitor.visitChildren(it)
+            appendUntil(it.endOffset)
             ann.pop()
-            ann.pushStyle(grayedOut)
-            ann.append(it.closingMarker)
-            ann.pop()
-            lastOffset = it.endOffset
         },
         VisitHandler(StrongEmphasis::class.java) {
-            appendPrevious(it.startOffset)
-            ann.pushStyle(grayedOut)
-            ann.append(it.openingMarker)
-            ann.pop()
+            appendUntil(it.startOffset)
             ann.pushStyle(SpanStyle(fontWeight = FontWeight.Bold))
-            ann.append(it.childChars)
+            visitor.visitChildren(it)
+            appendUntil(it.endOffset)
             ann.pop()
-            ann.pushStyle(grayedOut)
-            ann.append(it.closingMarker)
-            ann.pop()
-            lastOffset = it.endOffset
         },
         VisitHandler(Heading::class.java) {
-            appendPrevious(it.startOffset)
+            appendUntil(it.startOffset)
             ann.pushStyle(SpanStyle(fontSize = (22 - 2 * it.level).coerceAtLeast(16).sp))
-            if (it.openingMarker.isNotBlank()) {
-                ann.pushStyle(grayedOut)
-                ann.append(it.openingMarker)
-                ann.append(" ")
-                ann.pop()
-            }
-            ann.append(it.childChars)
-            if (it.closingMarker.isNotBlank()) {
-                ann.pushStyle(grayedOut)
-                ann.append("\n")
-                ann.append(it.closingMarker)
-                ann.pop()
-            }
+            visitor.visitChildren(it)
+            appendUntil(it.endOffset+1)
             ann.pop()
-            lastOffset = it.endOffset
         },
         VisitHandler(FencedCodeBlock::class.java) {
-            appendPrevious(it.startOffset)
+            appendUntil(it.startOffset)
             ann.pushStyle(grayedOut)
-            ann.append(it.openingMarker)
-            ann.append(it.info)
+            appendUntil(max(it.info.endOffset, it.openingMarker.endOffset))
             ann.pop()
 
             ann.pushStyle(SpanStyle(color = Color.Gray))
-            ann.append("\n")
-            ann.append(it.childChars)
+            visitor.visitChildren(it)
             ann.pop()
 
             ann.pushStyle(grayedOut)
-            ann.append(it.closingMarker)
+            appendUntil(it.closingMarker.endOffset)
             ann.pop()
-            lastOffset = it.endOffset
         },
         VisitHandler(Code::class.java) {
-            appendPrevious(it.startOffset)
+            appendUntil(it.startOffset)
+            ann.pushStyle(SpanStyle(color = Color.Gray))
+            visitor.visitChildren(it)
+            appendUntil(it.endOffset)
+            ann.pop()
+        },
+        VisitHandler(LinkRef::class.java) {
+            appendUntil(it.startOffset)
+
+            ann.pushStyle(SpanStyle(baselineShift = BaselineShift.Superscript, fontSize = 12.sp))
+            ann.pushStyle(grayedOut)
+            appendUntil(it.childChars.startOffset)
+            ann.pop()
+
+            ann.pushStyle(SpanStyle(color = Color.Blue))
+            visitor.visitChildren(it)
+            ann.pop()
+
+            ann.pushStyle(grayedOut)
+            appendUntil(it.endOffset)
+            ann.pop()
+            ann.pop()
+        },
+        VisitHandler(Link::class.java) {
+            appendUntil(it.startOffset)
+            ann.pushStyle(grayedOut)
+            appendUntil(it.textOpeningMarker.endOffset)
+            ann.pop()
+
+            ann.pushStyle(SpanStyle(color = Color.Blue))
+            appendUntil(it.childChars.endOffset)
+            ann.pop()
+
+            ann.pushStyle(grayedOut)
+            appendUntil(it.endOffset)
+            ann.pop()
+        },
+        VisitHandler(WikiLink::class.java) {
+            appendUntil(it.startOffset)
+
             ann.pushStyle(grayedOut)
             ann.append(it.openingMarker)
             ann.pop()
+            lastOffset += it.openingMarker.length
 
-            ann.pushStyle(SpanStyle(color = Color.Gray))
-            ann.append(it.childChars)
+            ann.pushStyle(SpanStyle(color = Color.Blue))
+            visitor.visitChildren(it)
             ann.pop()
 
             ann.pushStyle(grayedOut)
             ann.append(it.closingMarker)
             ann.pop()
-
             lastOffset = it.endOffset
         },
-        VisitHandler(LinkRef::class.java) {
-            appendPrevious(it.startOffset)
-            ann.pushStyle(grayedOut)
-            ann.append(it.baseSequence.substring(it.startOffset, it.firstChild?.startOffset ?: it.startOffset))
-            ann.pop()
-
-            ann.pushStyle(SpanStyle(color = Color.Blue))
-            //it.children.forEach { ann.append(it, false) }
-            ann.append(it.childChars)
-            ann.pop()
-
-            ann.pushStyle(grayedOut)
-            ann.append(it.baseSequence.substring(it.lastChild?.endOffset ?: it.endOffset, it.endOffset))
-            ann.pop()
-
-            lastOffset = it.endOffset
-        },
-        VisitHandler(Link::class.java) {
-            appendPrevious(it.startOffset)
-            ann.pushStyle(grayedOut)
-            ann.append(it.baseSequence.substring(it.startOffset, it.firstChild?.startOffset ?: it.startOffset))
-            ann.pop()
-
-            ann.pushStyle(SpanStyle(color = Color.Blue))
-            //it.children.forEach { ann.append(it, false) }
-            ann.append(it.childChars)
-            ann.pop()
-
-            ann.pushStyle(grayedOut)
-            ann.append(it.baseSequence.substring(it.lastChild?.endOffset ?: it.endOffset, it.endOffset))
-            ann.pop()
-
-            lastOffset = it.endOffset
-        },
-        VisitHandler(WikiLink::class.java) {
-            appendPrevious(it.startOffset)
-            ann.pushStyle(grayedOut)
-            ann.append(it.baseSequence.substring(it.startOffset, it.firstChild?.startOffset ?: it.startOffset))
-            ann.pop()
-
-            ann.pushStyle(SpanStyle(color = Color.Blue))
-            ann.append(it.childChars)
-            ann.pop()
-
-            ann.pushStyle(grayedOut)
-            ann.append(it.baseSequence.substring(it.lastChild?.endOffset ?: it.endOffset, it.endOffset))
-            ann.pop()
-
-            lastOffset = it.endOffset
+        VisitHandler(Text::class.java) {
+            appendUntil(it.endOffset)
         }
     ))
 
+
     visitor.visit(document)
 
-    ann.append(document.chars.substring(lastOffset, document.endOffset))
+    appendUntil(document.endOffset)
     return ann.toAnnotatedString()
 }

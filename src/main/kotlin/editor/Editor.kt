@@ -96,7 +96,7 @@ fun Editor(vm: EditorViewModel = viewModel { EditorViewModel() },
                 fontSize = 16.sp
             ),
             visualTransformation = { text ->
-                val highlighted = Markdown.parse(text.text).toAnnotatedString()
+                val highlighted = Markdown.parse(text.text).highlighted()
                 TransformedText(highlighted, OffsetMapping.Identity)
             },
             onTextLayout = {
