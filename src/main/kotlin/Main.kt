@@ -32,7 +32,7 @@ class AppState {
 
 class AppViewModel(
     appState: AppState = AppState(),
-    val vault: Vault,
+    val root: Root,
     val inputDialogViewModel: InputDialogViewModel = InputDialogViewModel(),
     val searchDialogViewModel: SearchDialogViewModel = SearchDialogViewModel(),
     val confirmDialogViewModel: ConfirmDialogViewModel = ConfirmDialogViewModel(),
@@ -116,8 +116,8 @@ fun ToolBar(
 
 @Composable
 fun FileList() {
-    val vault = Vault("/home/marad/dendron/notes/")
-    val files = vault.searchFiles("")
+    val root = Root("/home/marad/dendron/notes/")
+    val files = root.searchFiles("")
 
     val scrollState = rememberScrollState()
 
@@ -142,10 +142,10 @@ fun FileList() {
 fun main() = application {
     val vaultPath = Path.of("").resolve("test-vault").toAbsolutePath().toString()
 
-    val vault = Vault(vaultPath)
+    val root = Root(vaultPath)
     val appVm = remember {
         AppViewModel(
-            vault = vault,
+            root = root,
             searchDialogViewModel = SearchDialogViewModel()
         )
     }
@@ -179,9 +179,9 @@ fun main() = application {
                         (it.description?.contains(searchTerm, ignoreCase = true) ?: false)
             }
         } else {
-            vault.searchFiles(name).map {
+            root.searchFiles(name).map {
                 Action(it) {
-                    appState.workspaceState.addTab(it, vault.pathToFile(it))
+                    appState.workspaceState.addTab(it, root.pathToFile(it))
                 }
             }
         }
@@ -196,7 +196,7 @@ fun main() = application {
         MaterialTheme(colors = lightColors(primary = Color(0.2f, 0.6f, 0.2f))) {
             Surface {
                 App(appVm, onRequestCompletions = { tab, query ->
-                    vault.searchFiles(query)
+                    root.searchFiles(query)
                 })
             }
 

@@ -42,7 +42,7 @@ fun newNoteAction(appVm: AppViewModel): Action =
         val activeTab = appVm.state.value.workspaceState.activeTabState()
         val title = activeTab?.title?.value
         appVm.inputDialogViewModel.show(title ?: "") { fileName ->
-            val path = appVm.vault.pathToFile(fileName)
+            val path = appVm.root.pathToFile(fileName)
             val content = """
                 |---
                 |title: ${fileName.split(".").last()}
@@ -88,7 +88,7 @@ fun createRenameNoteAction(appVm: AppViewModel): Action =
         if (activeTab != null) {
             val title = activeTab.title.value
             appVm.inputDialogViewModel.show(title) { newTitle ->
-                val path = appVm.vault.pathToFile(newTitle)
+                val path = appVm.root.pathToFile(newTitle)
                 val content = activeTab.editorViewModel?.content?.text ?: ""
                 Files.write(path, content.toByteArray())
                 activeTab.file.let { Files.delete(it) }

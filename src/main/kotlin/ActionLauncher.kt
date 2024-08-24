@@ -138,7 +138,7 @@ fun ActionItem(action: Action,
 @Composable
 @Preview
 fun test() {
-    val vault = Vault("/home/marad/dendron/notes/")
+    val root = Root("/home/marad/dendron/notes/")
     val state = remember {
         LauncherState()
     }
@@ -147,7 +147,7 @@ fun test() {
     ActionLauncher(state,
         onSearchChange = { name ->
             state.actions.clear()
-            val files = vault.searchFiles(name)
+            val files = root.searchFiles(name)
             println(files)
             state.actions.addAll(files.map { Action(it) { println(it) } })
         },

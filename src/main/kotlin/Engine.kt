@@ -9,17 +9,17 @@ import kotlin.io.path.nameWithoutExtension
 
 fun main() {
     val path = "/home/marad/dendron/notes/"
-    val vault = Vault(path)
+    val root = Root(path)
 
 //    vault.searchFiles("gcp").forEach(::println)
 //    vault.search("sql").forEach(::println)
 
 //    vault.listHierarchy("gtd").forEach(::println)
-    val h = vault.getHierarchy()
+    val h = root.getHierarchy()
 }
 
 
-class Vault(private val path: String) {
+class Root(private val path: String) {
     private val files = FilesFacade.create()
     private val rg = RgFacade.create()
 
