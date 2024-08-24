@@ -36,7 +36,7 @@ class Root(private val path: String) {
 }
 
 class Hierarchy(path: String) {
-    private val root = Node("Vault", "")
+    private val root = Node("Root", "")
 
     init {
         Files.list(Paths.get(path)).forEach {
@@ -62,8 +62,8 @@ class Hierarchy(path: String) {
     }
 }
 
-fun String.capitalizeWords() = split(" ").map { word ->
+fun String.capitalizeWords() = split(" ").joinToString(" ") { word ->
     word.replaceFirstChar {
         if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
     }
-}.joinToString(" ")
+}

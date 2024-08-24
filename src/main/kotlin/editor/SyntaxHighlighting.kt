@@ -70,7 +70,7 @@ fun Document.highlighted(): AnnotatedString {
             ann.pop()
 
             ann.pushStyle(grayedOut)
-            appendUntil(it.closingMarker.endOffset)
+            appendUntil(max(it.closingMarker.endOffset, it.endOffset))
             ann.pop()
         },
         VisitHandler(Code::class.java) {
