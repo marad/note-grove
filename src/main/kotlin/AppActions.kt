@@ -28,7 +28,7 @@ fun createSaveAction(appState: AppState): Action =
             )
             visitor.visit(md)
 
-            val updatedContent = Markdown.render(md)
+            val updatedContent = md.chars.toString()
             tab.editorViewModel.updateContent(updatedContent)
 
             Files.write(tab.file, updatedContent.toByteArray())

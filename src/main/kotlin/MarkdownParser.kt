@@ -1,12 +1,13 @@
 import com.vladsch.flexmark.ext.wikilink.WikiLinkExtension
-import com.vladsch.flexmark.ext.yaml.front.matter.YamlFrontMatterBlock
 import com.vladsch.flexmark.ext.yaml.front.matter.YamlFrontMatterExtension
 import com.vladsch.flexmark.ext.yaml.front.matter.YamlFrontMatterNode
 import com.vladsch.flexmark.formatter.Formatter
 import com.vladsch.flexmark.parser.Parser
 import com.vladsch.flexmark.util.ast.Document
+import com.vladsch.flexmark.util.ast.Node
 import com.vladsch.flexmark.util.ast.VisitHandler
 import com.vladsch.flexmark.util.data.MutableDataSet
+import com.vladsch.flexmark.util.sequence.BasedSequence
 
 object Markdown {
     private val options = MutableDataSet().also {
@@ -30,15 +31,39 @@ object Markdown {
     }
 
     fun render(document: Document): String {
-        return renderer.render(document)
+        val builder = StringBuilder()
+        var lastOffset = 0
+        fun appendUntil(until: Int) {
+            val endIndex = until.coerceIn(lastOffset, document.chars.length)
+            builder.append(document.chars.substring(lastOffset, endIndex))
+            lastOffset = endIndex
+        }
+
+        val queue = mutableListOf<Node>(document)
+        while (queue.isNotEmpty()) {
+            val node = queue.removeAt(0)
+            if (node.hasChildren()) {
+                node.reversedChildren.forEach {
+                    queue.add(0, it)
+                }
+            } else {
+                appendUntil(node.startOffset)
+                builder.append(node.chars)
+                lastOffset = node.endOffset
+            }
+            println(builder.toString())
+        }
+
+        appendUntil(document.endOffset)
+        return builder.toString()
     }
 
     fun updateYamlFrontmatterVisitHandler(key: String, value: String): VisitHandler<YamlFrontMatterNode> {
         return VisitHandler(YamlFrontMatterNode::class.java) { node ->
             if (node.key == key) {
-                val block = node.parent as YamlFrontMatterBlock
                 val range = node.children.first().sourceRange
-                block.chars = block.chars.replace(range.start, range.end, value)
+                node.children.first().chars = BasedSequence.of(value)
+                node.document.chars = node.document.chars.replace(range.start, range.end, value)
             }
         }
     }
