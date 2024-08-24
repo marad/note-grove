@@ -174,8 +174,8 @@ fun main() = application {
         if (name.startsWith(">")) {
             val searchTerm = name.drop(1).trim()
             appActions.filter {
-                it.name.contains(searchTerm) ||
-                        (it.description?.contains(searchTerm) ?: false)
+                it.name.contains(searchTerm, ignoreCase = true) ||
+                        (it.description?.contains(searchTerm, ignoreCase = true) ?: false)
             }
         } else {
             vault.searchFiles(name).map {
