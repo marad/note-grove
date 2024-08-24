@@ -85,7 +85,7 @@ fun Document.highlighted(): AnnotatedString {
 
             ann.pushStyle(SpanStyle(baselineShift = BaselineShift.Superscript, fontSize = 12.sp))
             ann.pushStyle(grayedOut)
-            appendUntil(it.childChars.startOffset)
+            appendUntil(max(it.childChars.startOffset, it.referenceOpeningMarker.endOffset))
             ann.pop()
 
             ann.pushStyle(SpanStyle(color = Color.Blue))
@@ -104,7 +104,7 @@ fun Document.highlighted(): AnnotatedString {
             ann.pop()
 
             ann.pushStyle(SpanStyle(color = Color.Blue))
-            appendUntil(it.childChars.endOffset)
+            appendUntil(max(it.childChars.endOffset, it.textClosingMarker.startOffset))
             ann.pop()
 
             ann.pushStyle(grayedOut)

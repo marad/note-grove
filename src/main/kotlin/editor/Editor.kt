@@ -108,7 +108,7 @@ fun Editor(vm: EditorViewModel = viewModel { EditorViewModel() },
 
         if (vm.completionsState.isVisible()) {
             if (layout != null) {
-                val offset = state.content.selection.start
+                val offset = (state.content.selection.start-1).coerceAtLeast(0)
                 val left = layout.getHorizontalPosition(offset, true)
                 val top = layout.getLineBottom(layout.getLineForOffset(offset))
                 val density = LocalDensity.current.density
