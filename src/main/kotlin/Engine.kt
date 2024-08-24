@@ -1,6 +1,6 @@
-import gh.marad.grove.files.FilesFacade
-import gh.marad.grove.rg.Entry
-import gh.marad.grove.rg.RgFacade
+import files.FilesFacade
+import rg.Entry
+import rg.RgFacade
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths

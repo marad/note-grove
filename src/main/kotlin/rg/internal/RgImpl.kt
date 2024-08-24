@@ -1,8 +1,8 @@
-package gh.marad.grove.rg.internal
+package rg.internal
 
 import com.google.gson.GsonBuilder
-import gh.marad.grove.rg.Entry
-import gh.marad.grove.rg.RgFacade
+import rg.Entry
+import rg.RgFacade
 import java.io.BufferedReader
 import java.io.InputStreamReader
 

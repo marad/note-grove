@@ -1,6 +1,6 @@
-package gh.marad.grove.rg
+package rg
 
-import gh.marad.grove.rg.internal.RgImpl
+import rg.internal.RgImpl
 
 interface RgFacade {
     fun search(pattern: String, path: String): List<Entry>

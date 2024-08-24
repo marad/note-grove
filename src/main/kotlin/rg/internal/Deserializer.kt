@@ -1,7 +1,7 @@
-package gh.marad.grove.rg.internal
+package rg.internal
 
 import com.google.gson.*
-import gh.marad.grove.rg.*
+import rg.*
 import java.lang.reflect.Type
 
 class EntryDeserializer(private val gson: Gson = Gson()) : JsonDeserializer<Entry> {

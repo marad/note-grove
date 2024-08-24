@@ -1,6 +1,6 @@
-package gh.marad.grove.files
+package files
 
-import gh.marad.grove.files.internal.BasicSearch
+import files.internal.BasicSearch
 
 interface FilesFacade {
     fun search(pattern: String, path: String): List<String>

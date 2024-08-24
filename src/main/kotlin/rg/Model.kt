@@ -1,4 +1,4 @@
-package gh.marad.grove.rg
+package rg
 
 sealed interface Entry
 
