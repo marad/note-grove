@@ -159,6 +159,7 @@ fun main() = application {
     val closeTabAction = createCloseTabAction(appState)
     val newNoteAction = newNoteAction(appVm)
     val deleteNoteAction = createDeleteAction(appVm)
+    val renameNoteAction = createRenameNoteAction(appVm)
 
     shortcuts.add(Shortcut(Key.P, KeyModifier.Ctrl), showSearchDialog)
     shortcuts.add(Shortcut(Key.P, KeyModifier.Ctrl, KeyModifier.Shift), showActionSearchDialog)
@@ -167,7 +168,7 @@ fun main() = application {
     shortcuts.add(Shortcut(Key.N, KeyModifier.Ctrl), newNoteAction)
 
 
-    val appActions = listOf(saveAction, showSearchDialog, closeTabAction, newNoteAction, deleteNoteAction)
+    val appActions = listOf(saveAction, showSearchDialog, closeTabAction, newNoteAction, deleteNoteAction, renameNoteAction)
 
 
     appVm.searchDialogViewModel.onSearchActions = { name ->
