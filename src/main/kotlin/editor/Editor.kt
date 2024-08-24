@@ -69,7 +69,7 @@ fun Editor(vm: EditorViewModel = viewModel { EditorViewModel() },
                             vm.completionsState.hide()
                             return@onPreviewKeyEvent true
                         }
-                        if (it.key == Key.Tab && it.type == KeyEventType.KeyDown) {
+                        if ((it.key == Key.Tab || it.key == Key.Enter) && it.type == KeyEventType.KeyDown) {
                             vm.completionsState.getSelected()?.let {
                                 val startOffset = vm.completionsState.getStartOffset()
                                 vm.replace(TextRange(startOffset, state.content.selection.end), "$it]]")
@@ -78,12 +78,12 @@ fun Editor(vm: EditorViewModel = viewModel { EditorViewModel() },
                             return@onPreviewKeyEvent true
                         }
                         if (it.type == KeyEventType.KeyDown &&
-                            (it.key == Key.J && it.isCtrlPressed) || (it.key == Key.DirectionDown)) {
+                            ((it.key == Key.J && it.isCtrlPressed) || (it.key == Key.DirectionDown))) {
                             vm.completionsState.next()
                             return@onPreviewKeyEvent true
                         }
                         if (it.type == KeyEventType.KeyDown &&
-                            (it.key == Key.K && it.isCtrlPressed) || (it.key == Key.DirectionUp)) {
+                            ((it.key == Key.K && it.isCtrlPressed) || (it.key == Key.DirectionUp))) {
                             vm.completionsState.previous()
                             return@onPreviewKeyEvent true
                         }

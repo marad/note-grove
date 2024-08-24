@@ -37,10 +37,11 @@ class CompletionsState() {
         show()
     }
     fun previous() {
-        selected.value = (selected.value-1).coerceAtLeast(0)
+        selected.value = (selected.value-1) % items.size
+        if (selected.value < 0) selected.value = items.size-1
     }
     fun next() {
-        selected.value = (selected.value+1).coerceAtMost(items.size-1)
+        selected.value = (selected.value+1) % items.size
     }
     fun isSelected(index: Int) = selected.value == index
     fun getSelected(): String? = items.getOrNull(selected.value)
