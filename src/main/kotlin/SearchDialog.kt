@@ -25,6 +25,7 @@ class SearchDialogViewModel : ViewModel() {
         show()
     }
     fun show() {
+        state.value.actionLauncherState.selectedItem.value = 0
         search(state.value.actionLauncherState.text.value.text)
         _state.value = state.value.copy(visible = true)
     }
