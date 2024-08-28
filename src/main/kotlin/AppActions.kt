@@ -1,14 +1,35 @@
 import com.vladsch.flexmark.util.ast.NodeVisitor
 import java.nio.file.Files
 
-fun createSearchNoteAction(appVm: AppViewModel): Action =
+private fun searchActions(appVm: AppViewModel, appActions: List<Action>, name: String): List<Action> {
+    return if (name.startsWith(">")) {
+        val searchTerm = name.drop(1).trim()
+        appActions.filter {
+            it.name.contains(searchTerm, ignoreCase = true) ||
+                    (it.description?.contains(searchTerm, ignoreCase = true) ?: false)
+        }
+    } else {
+        val root = appVm.state.value.root
+        root.searchFiles(name).map {
+            Action(it) {
+                appVm.state.value.workspace.addTab(it, root.pathToFile(it))
+            }
+        }
+    }
+}
+
+fun createSearchNoteAction(appVm: AppViewModel, appActions: List<Action>): Action =
     Action("Search note", "Shows search note dialog") {
-        appVm.searchDialogViewModel.showWithPrefix("")
+        appVm.actionLauncherViewModel.show("") {
+            searchActions(appVm, appActions, it)
+        }
     }
 
-fun createSearchActionsAction(appVm: AppViewModel): Action =
+fun createSearchActionsAction(appVm: AppViewModel, appActions: List<Action>): Action =
     Action("Search actions", "Shows search actions dialog") {
-        appVm.searchDialogViewModel.showWithPrefix("> ")
+        appVm.actionLauncherViewModel.show("> ") {
+            searchActions(appVm, appActions, it)
+        }
     }
 
 fun createCloseTabAction(appState: AppState): Action =
@@ -41,8 +62,7 @@ fun newNoteAction(appVm: AppViewModel): Action =
     Action("New note", "Creates a new note") {
         val activeTab = appVm.state.value.workspace.activeTabState()
         val title = activeTab?.title?.value
-        appVm.inputDialogViewModel.show(title ?: "") { fileName ->
-
+        appVm.actionLauncherViewModel.showInput(initialQuery = title ?: "") { fileName ->
             val root = appVm.state.value.root
 
             val path = root.pathToFile(fileName)
@@ -70,8 +90,7 @@ fun createDeleteAction(appVm: AppViewModel): Action =
             "Are you sure that you want to delete $it?"
         } ?: "Are you sure that you want to delete this note?"
 
-        appVm.confirmDialogViewModel.show(
-            question = question,
+        appVm.actionLauncherViewModel.showConfirm(
             onConfirm = {
                 activeTab?.file?.let {
                     Files.deleteIfExists(it)
@@ -90,7 +109,7 @@ fun createRenameNoteAction(appVm: AppViewModel): Action =
         val activeTab = appVm.state.value.workspace.activeTabState()
         if (activeTab != null) {
             val title = activeTab.title.value
-            appVm.inputDialogViewModel.show(title) { newTitle ->
+            appVm.actionLauncherViewModel.showInput(initialQuery = title) { newTitle ->
                 val root = appVm.state.value.root
                 val path = root.pathToFile(newTitle)
                 val content = activeTab.editorViewModel?.content?.text ?: ""

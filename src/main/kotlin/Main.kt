@@ -49,9 +49,7 @@ data class RootState(
 
 class AppViewModel(
     appConfig: AppConfig,
-    val inputDialogViewModel: InputDialogViewModel = InputDialogViewModel(),
-    val searchDialogViewModel: SearchDialogViewModel = SearchDialogViewModel(),
-    val confirmDialogViewModel: ConfirmDialogViewModel = ConfirmDialogViewModel(),
+    val actionLauncherViewModel: LauncherViewModel = LauncherViewModel(),
 ) : ViewModel() {
     private val _state = MutableStateFlow(AppState(
         roots = appConfig.roots.map { RootState(it.name, Root(it.path)) }
@@ -172,7 +170,6 @@ fun main() = application {
     val appVm = remember {
         AppViewModel(
             appConfig = config,
-            searchDialogViewModel = SearchDialogViewModel()
         )
     }
     val shortcuts = Shortcuts()
@@ -180,45 +177,30 @@ fun main() = application {
     val appState by appVm.state.collectAsState()
 
     val saveAction = createSaveAction(appState)
-    val showSearchDialog = createSearchNoteAction(appVm)
-    val showActionSearchDialog = createSearchActionsAction(appVm)
     val closeTabAction = createCloseTabAction(appState)
     val newNoteAction = newNoteAction(appVm)
     val deleteNoteAction = createDeleteAction(appVm)
     val renameNoteAction = createRenameNoteAction(appVm)
 
-    shortcuts.add(Shortcut(Key.P, KeyModifier.Ctrl), showSearchDialog)
-    shortcuts.add(Shortcut(Key.P, KeyModifier.Ctrl, KeyModifier.Shift), showActionSearchDialog)
     shortcuts.add(Shortcut(Key.S, KeyModifier.Ctrl), saveAction)
     shortcuts.add(Shortcut(Key.W, KeyModifier.Ctrl), closeTabAction)
     shortcuts.add(Shortcut(Key.N, KeyModifier.Ctrl), newNoteAction)
 
 
-    val appActions = listOf(
-        saveAction, showSearchDialog, closeTabAction, newNoteAction, deleteNoteAction, renameNoteAction,
+    val appActions = mutableListOf(
+        saveAction, closeTabAction, newNoteAction, deleteNoteAction, renameNoteAction,
         Action("Toggle root", "") {
             appVm.toggleRoot()
         }
     )
 
+    val showNoteSearchDialog = createSearchNoteAction(appVm, appActions)
+    val showActionSearchDialog = createSearchActionsAction(appVm, appActions)
+    shortcuts.add(Shortcut(Key.P, KeyModifier.Ctrl), showNoteSearchDialog)
+    shortcuts.add(Shortcut(Key.P, KeyModifier.Ctrl, KeyModifier.Shift), showActionSearchDialog)
 
-    appVm.searchDialogViewModel.onSearchActions = { name ->
-        if (name.startsWith(">")) {
-            val searchTerm = name.drop(1).trim()
-            appActions.filter {
-                it.name.contains(searchTerm, ignoreCase = true) ||
-                        (it.description?.contains(searchTerm, ignoreCase = true) ?: false)
-            }
-        } else {
-            val root = appVm.state.value.root
-            root.searchFiles(name).map {
-                Action(it) {
-                    appState.workspace.addTab(it, root.pathToFile(it))
-                }
-            }
-        }
-    }
-
+    appActions.add(showNoteSearchDialog)
+    appActions.add(showActionSearchDialog)
 
     Window(
         title = "Note Grove - ${appState.name}",
@@ -234,9 +216,7 @@ fun main() = application {
                 })
             }
 
-            InputDialog(appVm.inputDialogViewModel)
-            SearchDialog(appVm.searchDialogViewModel)
-            ConfirmDialog(appVm.confirmDialogViewModel)
+            ActionLauncherDialog(appVm.actionLauncherViewModel)
         }
     }
 }
