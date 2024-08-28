@@ -56,8 +56,15 @@ class AppViewModel(
     ))
     val state = _state.asStateFlow()
 
-    fun toggleRoot() {
+    fun cycleRoots() {
         _state.value = _state.value.copy(activeRootIndex = (_state.value.activeRootIndex + 1) % _state.value.roots.size)
+    }
+
+    fun selectRoot(root: Root) {
+        val index = _state.value.roots.indexOfFirst { it.root == root }
+        if (index != -1) {
+            _state.value = _state.value.copy(activeRootIndex = index)
+        }
     }
 }
 
@@ -181,17 +188,19 @@ fun main() = application {
     val newNoteAction = newNoteAction(appVm)
     val deleteNoteAction = createDeleteAction(appVm)
     val renameNoteAction = createRenameNoteAction(appVm)
+    val selectRootAction = createSelectRootAction(appVm)
+    val cycleRootAction = createCycleRootAction(appVm)
 
     shortcuts.add(Shortcut(Key.S, KeyModifier.Ctrl), saveAction)
     shortcuts.add(Shortcut(Key.W, KeyModifier.Ctrl), closeTabAction)
     shortcuts.add(Shortcut(Key.N, KeyModifier.Ctrl), newNoteAction)
+    shortcuts.add(Shortcut(Key.R, KeyModifier.Ctrl), selectRootAction)
+    shortcuts.add(Shortcut(Key.R, KeyModifier.Ctrl, KeyModifier.Shift), cycleRootAction)
 
 
     val appActions = mutableListOf(
-        saveAction, closeTabAction, newNoteAction, deleteNoteAction, renameNoteAction,
-        Action("Toggle root", "") {
-            appVm.toggleRoot()
-        }
+        saveAction, closeTabAction, newNoteAction, deleteNoteAction, renameNoteAction, selectRootAction,
+        cycleRootAction
     )
 
     val showNoteSearchDialog = createSearchNoteAction(appVm, appActions)

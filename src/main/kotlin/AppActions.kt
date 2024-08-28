@@ -120,3 +120,22 @@ fun createRenameNoteAction(appVm: AppViewModel): Action =
             }
         }
     }
+
+fun createSelectRootAction(appVm: AppViewModel): Action =
+    Action("Select root", "Shows dialog to switch active root") {
+        val state = appVm.state.value
+        appVm.actionLauncherViewModel.show("") { query ->
+            val roots = state.roots
+            roots.filter { it.name.contains(query, ignoreCase = true) }
+                .map { rootInfo ->
+                    Action(rootInfo.name, "Switch to root ${rootInfo.name}") {
+                        appVm.selectRoot(rootInfo.root)
+                    }
+                }
+        }
+    }
+
+fun createCycleRootAction(appVm: AppViewModel): Action =
+    Action("Cycle roots", "Cycles through all opened roots") {
+        appVm.cycleRoots()
+    }
