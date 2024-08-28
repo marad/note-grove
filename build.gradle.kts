@@ -12,6 +12,7 @@ version = "1.0-SNAPSHOT"
 repositories {
     mavenCentral()
     maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+    maven("https://jitpack.io")
     google()
 }
 
@@ -24,6 +25,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.11.0")
     implementation("com.vladsch.flexmark:flexmark-all:0.64.0")
     implementation("org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
+    implementation("cc.ekblad:4koma:1.2.0")
 }
 
 compose.desktop {

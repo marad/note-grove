@@ -21,24 +21,46 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import androidx.lifecycle.ViewModel
+import config.AppConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.nio.file.Path
+import kotlin.system.exitProcess
 
 
-class AppState {
-    val workspaceState = WorkspaceState()
+data class AppState(
+    val roots: List<RootState>,
+    val activeRootIndex: Int = 0,
+)  {
+    val name = roots[activeRootIndex].name
+    val workspace = roots[activeRootIndex].workspace
+    val root = roots[activeRootIndex].root
+
+    init {
+        assert(roots.isNotEmpty()) { "At least one root must be provided" }
+    }
 }
 
-class AppViewModel(
-    appState: AppState = AppState(),
+data class RootState(
+    val name: String,
     val root: Root,
+    val workspace: WorkspaceState = WorkspaceState()
+)
+
+class AppViewModel(
+    appConfig: AppConfig,
     val inputDialogViewModel: InputDialogViewModel = InputDialogViewModel(),
     val searchDialogViewModel: SearchDialogViewModel = SearchDialogViewModel(),
     val confirmDialogViewModel: ConfirmDialogViewModel = ConfirmDialogViewModel(),
 ) : ViewModel() {
-    private val _state = MutableStateFlow(appState)
+    private val _state = MutableStateFlow(AppState(
+        roots = appConfig.roots.map { RootState(it.name, Root(it.path)) }
+    ))
     val state = _state.asStateFlow()
+
+    fun toggleRoot() {
+        _state.value = _state.value.copy(activeRootIndex = (_state.value.activeRootIndex + 1) % _state.value.roots.size)
+    }
 }
 
 @Composable
@@ -51,7 +73,7 @@ fun App(appVm: AppViewModel, onRequestCompletions: (tabState: TabState, query: S
         ToolBar(
             onFilesClicked = {
                 println("Adding tab")
-                state.workspaceState.addTab("testing", Path.of("/tmp/testfile.md"))
+                state.workspace.addTab("testing", Path.of("/tmp/testfile.md"))
             }
         )
         //FileList()
@@ -63,7 +85,7 @@ fun App(appVm: AppViewModel, onRequestCompletions: (tabState: TabState, query: S
             color = Color.LightGray,
         )
 
-        Workspace(state.workspaceState, onRequestCompletions = onRequestCompletions)
+        Workspace(state.workspace, onRequestCompletions = onRequestCompletions)
     }
 
 }
@@ -140,12 +162,16 @@ fun FileList() {
 }
 
 fun main() = application {
-    val vaultPath = Path.of("").resolve("test-vault").toAbsolutePath().toString()
+    val currentDir = Path.of("")
+    val config = AppConfig.load(currentDir.resolve("config.toml"))
+    if (config == null) {
+        println("Config not found at ${currentDir.resolve("config.toml")}")
+        exitProcess(1)
+    }
 
-    val root = Root(vaultPath)
     val appVm = remember {
         AppViewModel(
-            root = root,
+            appConfig = config,
             searchDialogViewModel = SearchDialogViewModel()
         )
     }
@@ -168,7 +194,12 @@ fun main() = application {
     shortcuts.add(Shortcut(Key.N, KeyModifier.Ctrl), newNoteAction)
 
 
-    val appActions = listOf(saveAction, showSearchDialog, closeTabAction, newNoteAction, deleteNoteAction, renameNoteAction)
+    val appActions = listOf(
+        saveAction, showSearchDialog, closeTabAction, newNoteAction, deleteNoteAction, renameNoteAction,
+        Action("Toggle root", "") {
+            appVm.toggleRoot()
+        }
+    )
 
 
     appVm.searchDialogViewModel.onSearchActions = { name ->
@@ -179,16 +210,18 @@ fun main() = application {
                         (it.description?.contains(searchTerm, ignoreCase = true) ?: false)
             }
         } else {
+            val root = appVm.state.value.root
             root.searchFiles(name).map {
                 Action(it) {
-                    appState.workspaceState.addTab(it, root.pathToFile(it))
+                    appState.workspace.addTab(it, root.pathToFile(it))
                 }
             }
         }
     }
 
+
     Window(
-        title = "Note Grove",
+        title = "Note Grove - ${appState.name}",
         state = WindowState(size = DpSize(1000.dp, 800.dp)),
         onPreviewKeyEvent = shortcuts::handle,
         onCloseRequest = ::exitApplication) {
@@ -196,6 +229,7 @@ fun main() = application {
         MaterialTheme(colors = lightColors(primary = Color(0.2f, 0.6f, 0.2f))) {
             Surface {
                 App(appVm, onRequestCompletions = { tab, query ->
+                    val root = appVm.state.value.root
                     root.searchFiles(query)
                 })
             }
