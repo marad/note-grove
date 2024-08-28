@@ -128,7 +128,7 @@ fun createSelectRootAction(appVm: AppViewModel): Action =
             val roots = state.roots
             roots.filter { it.name.contains(query, ignoreCase = true) }
                 .map { rootInfo ->
-                    Action(rootInfo.name, "Switch to root ${rootInfo.name}") {
+                    Action(rootInfo.name, "Switch to ${rootInfo.name}") {
                         appVm.selectRoot(rootInfo.root)
                     }
                 }

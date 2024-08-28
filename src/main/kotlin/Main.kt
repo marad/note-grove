@@ -194,8 +194,8 @@ fun main() = application {
     shortcuts.add(Shortcut(Key.S, KeyModifier.Ctrl), saveAction)
     shortcuts.add(Shortcut(Key.W, KeyModifier.Ctrl), closeTabAction)
     shortcuts.add(Shortcut(Key.N, KeyModifier.Ctrl), newNoteAction)
-    shortcuts.add(Shortcut(Key.R, KeyModifier.Ctrl), selectRootAction)
-    shortcuts.add(Shortcut(Key.R, KeyModifier.Ctrl, KeyModifier.Shift), cycleRootAction)
+    shortcuts.add(Shortcut(Key.R, KeyModifier.Ctrl, KeyModifier.Shift), selectRootAction)
+    shortcuts.add(Shortcut(Key.R, KeyModifier.Ctrl), cycleRootAction)
 
 
     val appActions = mutableListOf(
