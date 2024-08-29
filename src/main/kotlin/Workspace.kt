@@ -21,11 +21,19 @@ class WorkspaceState {
     val tabs = mutableStateListOf<TabState>()
 
     fun addTab(title: String, file: Path, activateNewTab: Boolean = true, defaultContent: String = "") {
-        tabs.add(TabState(title, file, defaultContent = defaultContent))
-        if (activateNewTab) {
-            setActiveTab(tabs.size - 1)
+        val existingTabIndex = tabIndex(file)
+        if (existingTabIndex != null) {
+            if (activateNewTab) {
+                setActiveTab(existingTabIndex)
+            }
+        } else {
+            tabs.add(TabState(title, file, defaultContent = defaultContent))
+            if (activateNewTab) {
+                setActiveTab(tabs.size - 1)
+            }
         }
     }
+
     fun nextTab() { setActiveTab(tabIndex.value+1) }
     fun prevTab() { setActiveTab(tabIndex.value-1) }
     fun closeTab(index: Int) {
@@ -43,6 +51,10 @@ class WorkspaceState {
         }
     }
     fun activeTabState() = tabs.getOrNull(tabIndex.value)
+    fun findTab(file: Path): TabState? = tabs.firstOrNull { it.file == file }
+    fun tabIndex(file: Path): Int? = tabs.indexOfFirst { it.file == file }?.let {
+        if (it == -1) null else it
+    }
 
 }
 
