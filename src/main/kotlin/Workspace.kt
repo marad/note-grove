@@ -10,76 +10,90 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
 import editor.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.nameWithoutExtension
 import kotlin.io.path.notExists
 
-class WorkspaceState {
-    val tabIndex = mutableIntStateOf(0)
-    val tabs = mutableStateListOf<TabState>()
+data class WorkspaceState(val tabIndex: Int = 0, val vimMode: Boolean = false)
 
-    fun addTab(file: Path, activateNewTab: Boolean = true, defaultContent: String = "") {
-        val title = file.nameWithoutExtension
+class WorkspaceViewModel : ViewModel() {
+    private val _state = MutableStateFlow(WorkspaceState())
+    val state = _state.asStateFlow()
+    val tabs = mutableStateListOf<TabViewModel>()
+
+    fun addTab(file: Path, activateNewTab: Boolean = true) {
         val existingTabIndex = tabIndex(file)
         if (existingTabIndex != null) {
             if (activateNewTab) {
                 setActiveTab(existingTabIndex)
             }
         } else {
-            tabs.add(TabState(file, defaultContent = defaultContent))
+            tabs.add(TabViewModel(file))
             if (activateNewTab) {
                 setActiveTab(tabs.size - 1)
             }
         }
     }
 
-    fun nextTab() { setActiveTab(tabIndex.value+1) }
-    fun prevTab() { setActiveTab(tabIndex.value-1) }
+    fun updateTabFile(oldFile: Path, newFile: Path) {
+        findTab(oldFile)?.updateFile(newFile)
+    }
+
+    fun nextTab() { setActiveTab(state.value.tabIndex+1) }
+    fun prevTab() { setActiveTab(state.value.tabIndex-1) }
     fun closeTab(index: Int) {
         tabs.removeAt(index)
         prevTab()
     }
     fun setActiveTab(index: Int) {
-        tabIndex.value = index.coerceIn(0, (tabs.size-1).coerceAtLeast(0))
+        _state.value = _state.value.copy(
+            tabIndex = index.coerceIn(0, (tabs.size-1).coerceAtLeast(0))
+        )
     }
-    fun isTabActive(index: Int) = tabIndex.value == index
+    fun isTabActive(index: Int) = state.value.tabIndex == index
 
     fun closeActiveTab() {
-        if (tabIndex.value in 0..<tabs.size) {
-            closeTab(tabIndex.value)
+        if (state.value.tabIndex in 0..<tabs.size) {
+            closeTab(state.value.tabIndex)
         }
     }
-    fun activeTabState() = tabs.getOrNull(tabIndex.value)
-    fun findTab(file: Path): TabState? = tabs.firstOrNull { it.file == file }
-    fun tabIndex(file: Path): Int? = tabs.indexOfFirst { it.file == file }?.let {
+    fun activeTab(): TabViewModel? = tabs.getOrNull(state.value.tabIndex)
+    fun findTab(file: Path): TabViewModel? = tabs.firstOrNull { it.state.value.file == file }
+    fun tabIndex(file: Path): Int? = tabs.indexOfFirst { it.state.value.file == file }.let {
         if (it == -1) null else it
     }
+
 
 }
 
 @Composable
 @Preview
-fun Workspace(state: WorkspaceState, onRequestCompletions: (state: TabState, query: String) -> List<String> = { _,_ -> emptyList() }) {
-    if (state.tabs.isNotEmpty()) {
+fun Workspace(vm: WorkspaceViewModel, onRequestCompletions: (state: TabViewModel, query: String) -> List<String> = { _,_ -> emptyList() }) {
+    val state by vm.state.collectAsState()
+
+    if (vm.tabs.isNotEmpty()) {
         Column {
             ScrollableTabRow(
-                state.tabIndex.value,
+                state.tabIndex,
                 Modifier.height(40.dp)
             ) {
-                state.tabs.forEachIndexed { index, tabState ->
-                    WorkspaceTab(tabState, state.isTabActive(index),
-                        onClick = { state.setActiveTab(index) },
-                        onClose = { state.closeTab(index) })
+                vm.tabs.forEachIndexed { index, tabState ->
+                    WorkspaceTab(tabState, vm.isTabActive(index),
+                        onClick = { vm.setActiveTab(index) },
+                        onClose = { vm.closeTab(index) })
                 }
             }
 
-            val tabState = state.activeTabState()!!
+            val tabState = vm.activeTab()!!
 
 
-            if (tabState.vimMode) {
+            if (state.vimMode) {
                 VimMode(tabState.vimModeViewModel,
                     Modifier.padding(10.dp),
                     onRequestCompletions = { onRequestCompletions(tabState, it) })
@@ -108,14 +122,26 @@ fun Workspace(state: WorkspaceState, onRequestCompletions: (state: TabState, que
     }
 }
 
-class TabState(val file: Path, val vimMode: Boolean = false, defaultContent: String = "") {
+class TabState(val file: Path, val vimMode: Boolean = false) {
     val title = file.nameWithoutExtension
-    val editorViewModel = EditorViewModel(readContentIfExists(defaultContent), file.notExists())
+}
+
+class TabViewModel(path: Path, vimMode: Boolean = false, defaultContent: String = "") : ViewModel() {
+    private val _state = MutableStateFlow(TabState(path, vimMode))
+    val state = _state.asStateFlow()
+    val editorViewModel = EditorViewModel(readContentIfExists(defaultContent), _state.value.file.notExists())
     val vimModeViewModel = VimModeViewModel(editorViewModel)
 
+    val title get() = state.value.title
+    val path get() = state.value.file
+
+    fun updateFile(newFile: Path) {
+        _state.value = TabState(newFile, _state.value.vimMode)
+    }
+
     private fun readContentIfExists(defaultContent: String): String =
-        if (file.exists()) {
-            Files.readString(file)
+        if (_state.value.file.exists()) {
+            Files.readString(_state.value.file)
         } else {
             defaultContent
         }
@@ -123,12 +149,13 @@ class TabState(val file: Path, val vimMode: Boolean = false, defaultContent: Str
 
 
 @Composable
-fun WorkspaceTab(state: TabState,
+fun WorkspaceTab(tabVm: TabViewModel,
                  selected: Boolean,
                  onClick: () -> Unit = {},
                  onClose: () -> Unit = {}) {
 
-    val editorState by state.editorViewModel.state.collectAsState()
+    val state by tabVm.state.collectAsState()
+    val editorState by tabVm.editorViewModel.state.collectAsState()
 
     Tab(
         text = {

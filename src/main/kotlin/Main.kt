@@ -44,7 +44,7 @@ data class AppState(
 data class RootState(
     val name: String,
     val root: Root,
-    val workspace: WorkspaceState = WorkspaceState()
+    val workspace: WorkspaceViewModel = WorkspaceViewModel()
 )
 
 class AppViewModel(
@@ -70,7 +70,7 @@ class AppViewModel(
 
 @Composable
 @Preview
-fun App(appVm: AppViewModel, onRequestCompletions: (tabState: TabState, query: String) -> List<String> = { _,_ -> emptyList() }) {
+fun App(appVm: AppViewModel, onRequestCompletions: (tabViewModel: TabViewModel, query: String) -> List<String> = { _, _ -> emptyList() }) {
 
     val state by appVm.state.collectAsState()
 

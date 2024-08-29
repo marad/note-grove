@@ -40,7 +40,7 @@ fun createCloseTabAction(appState: AppState): Action =
 
 fun createSaveAction(appState: AppState): Action =
     Action("Save", "Saves current file") {
-        appState.workspace.activeTabState()?.let { tab ->
+        appState.workspace.activeTab()?.let { tab ->
             val content = tab.editorViewModel.content.text
 
             val md = Markdown.parse(content)
@@ -53,7 +53,7 @@ fun createSaveAction(appState: AppState): Action =
             val updatedContent = md.chars.toString()
             tab.editorViewModel.updateContent(updatedContent)
 
-            Files.write(tab.file, updatedContent.toByteArray())
+            Files.write(tab.path, updatedContent.toByteArray())
             tab.editorViewModel.clearDirty()
         }
     }
@@ -61,7 +61,7 @@ fun createSaveAction(appState: AppState): Action =
 
 fun newNoteAction(appVm: AppViewModel): Action =
     Action("New note", "Creates a new note") {
-        val activeTab = appVm.state.value.workspace.activeTabState()
+        val activeTab = appVm.state.value.workspace.activeTab()
         val title = activeTab?.title
         appVm.actionLauncherViewModel.showInput(initialQuery = title ?: "") { fileName ->
             val root = appVm.state.value.root
@@ -77,7 +77,7 @@ fun newNoteAction(appVm: AppViewModel): Action =
                 |
                 |
             """.trimMargin()
-            appVm.state.value.workspace.addTab(path, defaultContent = content)
+            appVm.state.value.workspace.addTab(path)
         }
 
     }
@@ -86,14 +86,14 @@ fun newNoteAction(appVm: AppViewModel): Action =
 fun createDeleteAction(appVm: AppViewModel): Action =
     Action("Delete", "Deletes current file") {
         // get current note name
-        val activeTab = appVm.state.value.workspace.activeTabState()
+        val activeTab = appVm.state.value.workspace.activeTab()
         val question = activeTab?.title?.let {
             "Are you sure that you want to delete $it?"
         } ?: "Are you sure that you want to delete this note?"
 
         appVm.actionLauncherViewModel.showConfirm(
             onConfirm = {
-                activeTab?.file?.let {
+                activeTab?.path?.let {
                     Files.deleteIfExists(it)
                     appVm.state.value.workspace.closeActiveTab()
                 }
@@ -107,7 +107,7 @@ fun createDeleteAction(appVm: AppViewModel): Action =
 
 fun createRenameNoteAction(appVm: AppViewModel): Action =
     Action("Rename", "Renames current file") {
-        val activeTab = appVm.state.value.workspace.activeTabState()
+        val activeTab = appVm.state.value.workspace.activeTab()
         if (activeTab != null) {
             val title = activeTab.title
             appVm.actionLauncherViewModel.showInput(initialQuery = title) { newTitle ->
@@ -115,9 +115,8 @@ fun createRenameNoteAction(appVm: AppViewModel): Action =
                 val path = root.pathToFile(newTitle)
                 val content = activeTab.editorViewModel.content.text
                 Files.write(path, content.toByteArray())
-                activeTab.file.let { Files.delete(it) }
-                appVm.state.value.workspace.closeTab(appVm.state.value.workspace.tabIndex.value)
-                appVm.state.value.workspace.addTab(path, defaultContent = content)
+                activeTab.path.let { Files.delete(it) }
+                appVm.state.value.workspace.updateTabFile(activeTab.path, path)
             }
         }
     }
@@ -143,7 +142,7 @@ fun createCycleRootAction(appVm: AppViewModel): Action =
 
 fun createRefactorHierarchyAction(appVm: AppViewModel): Action =
     Action("Refactor hierarchy", "Changes name for multiple files at once") {
-        val tabState = appVm.state.value.workspace.activeTabState()
+        val tabState = appVm.state.value.workspace.activeTab()
         val name = tabState?.title ?: ""
         val root = appVm.state.value.root
         // show input dialog to get the source pattern
@@ -161,7 +160,7 @@ fun createRefactorHierarchyAction(appVm: AppViewModel): Action =
                                     val oldPath = root.pathToFile(oldFileName)
                                     val newPath = root.pathToFile(newFileName)
                                     Files.move(oldPath, newPath)
-                                    // TODO: update tab title and path
+                                    appVm.state.value.workspace.updateTabFile(oldPath, newPath)
                                 }
                             }
                         }
