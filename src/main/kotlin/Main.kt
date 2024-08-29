@@ -200,7 +200,7 @@ fun main() = application {
 
     val appActions = mutableListOf(
         saveAction, closeTabAction, newNoteAction, deleteNoteAction, renameNoteAction, selectRootAction,
-        cycleRootAction
+        cycleRootAction, createRefactorHierarchyAction(appVm)
     )
 
     val showNoteSearchDialog = createSearchNoteAction(appVm, appActions)

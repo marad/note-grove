@@ -1,4 +1,5 @@
 import files.FilesFacade
+import files.internal.MatchingStrategy
 import rg.Entry
 import rg.RgFacade
 import java.nio.file.Files
@@ -27,8 +28,9 @@ class Root(private val path: String) {
 
     fun pathToFile(file: String): Path = Paths.get(path, "$file.md")
 
-    fun searchFiles(pattern: String): List<String> =
-        files.search(pattern, path)
+    fun searchFiles(pattern: String, strategy: (String,String)->Boolean = MatchingStrategy::fuzzy): List<String> =
+        files.search(pattern, path, strategy)
+
 
     fun search(pattern: String): List<Entry> =
         rg.search(pattern, path)

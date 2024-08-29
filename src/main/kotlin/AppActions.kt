@@ -1,4 +1,5 @@
 import com.vladsch.flexmark.util.ast.NodeVisitor
+import files.internal.MatchingStrategy
 import java.nio.file.Files
 
 private fun searchActions(appVm: AppViewModel, appActions: List<Action>, name: String): List<Action> {
@@ -138,4 +139,34 @@ fun createSelectRootAction(appVm: AppViewModel): Action =
 fun createCycleRootAction(appVm: AppViewModel): Action =
     Action("Cycle roots", "Cycles through all opened roots") {
         appVm.cycleRoots()
+    }
+
+fun createRefactorHierarchyAction(appVm: AppViewModel): Action =
+    Action("Refactor hierarchy", "Changes name for multiple files at once") {
+        val tabState = appVm.state.value.workspace.activeTabState()
+        val name = tabState?.title?.value ?: ""
+        val root = appVm.state.value.root
+        // show input dialog to get the source pattern
+        appVm.actionLauncherViewModel.show(initialQuery = name) { srcPattern ->
+            val files = root.searchFiles(srcPattern, MatchingStrategy::contains)
+            files.map { file ->
+                Action(file) {
+                    // show input dialog to get the destination pattern
+                    appVm.actionLauncherViewModel.show { dstPattern ->
+                        files.map {
+                            Action("$it > ${it.replace(srcPattern, dstPattern)}") {
+                                // rename selected files
+                                files.forEach { oldFileName ->
+                                    val newFileName = oldFileName.replace(srcPattern, dstPattern)
+                                    val oldPath = root.pathToFile(oldFileName)
+                                    val newPath = root.pathToFile(newFileName)
+                                    Files.move(oldPath, newPath)
+                                    // TODO: update tab title and path
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
