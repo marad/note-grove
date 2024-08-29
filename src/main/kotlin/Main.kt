@@ -32,9 +32,9 @@ data class AppState(
     val roots: List<RootState>,
     val activeRootIndex: Int = 0,
 )  {
-    val name = roots[activeRootIndex].name
-    val workspace = roots[activeRootIndex].workspace
-    val root = roots[activeRootIndex].root
+    val currentRootName get() =  roots[activeRootIndex].name
+    val workspace get() =  roots[activeRootIndex].workspace
+    val root get() =  roots[activeRootIndex].root
 
     init {
         assert(roots.isNotEmpty()) { "At least one root must be provided" }
@@ -55,6 +55,7 @@ class AppViewModel(
         roots = appConfig.roots.map { RootState(it.name, Root(it.path)) }
     ))
     val state = _state.asStateFlow()
+    val windowState = WindowState(size = DpSize(1000.dp, 800.dp))
 
     fun cycleRoots() {
         _state.value = _state.value.copy(activeRootIndex = (_state.value.activeRootIndex + 1) % _state.value.roots.size)
@@ -183,8 +184,8 @@ fun main() = application {
 
     val appState by appVm.state.collectAsState()
 
-    val saveAction = createSaveAction(appState)
-    val closeTabAction = createCloseTabAction(appState)
+    val saveAction = createSaveAction(appVm)
+    val closeTabAction = createCloseTabAction(appVm)
     val newNoteAction = newNoteAction(appVm)
     val deleteNoteAction = createDeleteAction(appVm)
     val renameNoteAction = createRenameNoteAction(appVm)
@@ -212,8 +213,8 @@ fun main() = application {
     appActions.add(showActionSearchDialog)
 
     Window(
-        title = "Note Grove - ${appState.name}",
-        state = WindowState(size = DpSize(1000.dp, 800.dp)),
+        title = "Note Grove - ${appState.currentRootName}",
+        state = appVm.windowState,
         onPreviewKeyEvent = shortcuts::handle,
         onCloseRequest = ::exitApplication) {
 

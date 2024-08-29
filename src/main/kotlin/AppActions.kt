@@ -33,14 +33,14 @@ fun createSearchActionsAction(appVm: AppViewModel, appActions: List<Action>): Ac
         }
     }
 
-fun createCloseTabAction(appState: AppState): Action =
+fun createCloseTabAction(appVm: AppViewModel): Action =
     Action("Close tab", "Closes current editor tab") {
-        appState.workspace.closeActiveTab()
+        appVm.state.value.workspace.closeActiveTab()
     }
 
-fun createSaveAction(appState: AppState): Action =
+fun createSaveAction(appVm: AppViewModel): Action =
     Action("Save", "Saves current file") {
-        appState.workspace.activeTab()?.let { tab ->
+        appVm.state.value.workspace.activeTab()?.let { tab ->
             val content = tab.editorViewModel.content.text
 
             val md = Markdown.parse(content)
