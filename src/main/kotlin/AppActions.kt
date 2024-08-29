@@ -13,7 +13,7 @@ private fun searchActions(appVm: AppViewModel, appActions: List<Action>, name: S
         val root = appVm.state.value.root
         root.searchFiles(name).map {
             Action(it) {
-                appVm.state.value.workspace.addTab(it, root.pathToFile(it))
+                appVm.state.value.workspace.addTab(root.pathToFile(it))
             }
         }
     }
@@ -62,7 +62,7 @@ fun createSaveAction(appState: AppState): Action =
 fun newNoteAction(appVm: AppViewModel): Action =
     Action("New note", "Creates a new note") {
         val activeTab = appVm.state.value.workspace.activeTabState()
-        val title = activeTab?.title?.value
+        val title = activeTab?.title
         appVm.actionLauncherViewModel.showInput(initialQuery = title ?: "") { fileName ->
             val root = appVm.state.value.root
 
@@ -77,7 +77,7 @@ fun newNoteAction(appVm: AppViewModel): Action =
                 |
                 |
             """.trimMargin()
-            appVm.state.value.workspace.addTab(fileName, path, defaultContent = content)
+            appVm.state.value.workspace.addTab(path, defaultContent = content)
         }
 
     }
@@ -87,7 +87,7 @@ fun createDeleteAction(appVm: AppViewModel): Action =
     Action("Delete", "Deletes current file") {
         // get current note name
         val activeTab = appVm.state.value.workspace.activeTabState()
-        val question = activeTab?.title?.value?.let {
+        val question = activeTab?.title?.let {
             "Are you sure that you want to delete $it?"
         } ?: "Are you sure that you want to delete this note?"
 
@@ -109,15 +109,15 @@ fun createRenameNoteAction(appVm: AppViewModel): Action =
     Action("Rename", "Renames current file") {
         val activeTab = appVm.state.value.workspace.activeTabState()
         if (activeTab != null) {
-            val title = activeTab.title.value
+            val title = activeTab.title
             appVm.actionLauncherViewModel.showInput(initialQuery = title) { newTitle ->
                 val root = appVm.state.value.root
                 val path = root.pathToFile(newTitle)
-                val content = activeTab.editorViewModel?.content?.text ?: ""
+                val content = activeTab.editorViewModel.content.text
                 Files.write(path, content.toByteArray())
                 activeTab.file.let { Files.delete(it) }
                 appVm.state.value.workspace.closeTab(appVm.state.value.workspace.tabIndex.value)
-                appVm.state.value.workspace.addTab(newTitle, path, defaultContent = content)
+                appVm.state.value.workspace.addTab(path, defaultContent = content)
             }
         }
     }
@@ -144,7 +144,7 @@ fun createCycleRootAction(appVm: AppViewModel): Action =
 fun createRefactorHierarchyAction(appVm: AppViewModel): Action =
     Action("Refactor hierarchy", "Changes name for multiple files at once") {
         val tabState = appVm.state.value.workspace.activeTabState()
-        val name = tabState?.title?.value ?: ""
+        val name = tabState?.title ?: ""
         val root = appVm.state.value.root
         // show input dialog to get the source pattern
         appVm.actionLauncherViewModel.show(initialQuery = name) { srcPattern ->

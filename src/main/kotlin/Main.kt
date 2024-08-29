@@ -78,7 +78,7 @@ fun App(appVm: AppViewModel, onRequestCompletions: (tabState: TabState, query: S
         ToolBar(
             onFilesClicked = {
                 println("Adding tab")
-                state.workspace.addTab("testing", Path.of("/tmp/testfile.md"))
+                state.workspace.addTab(Path.of("/tmp/testfile.md"))
             }
         )
         //FileList()

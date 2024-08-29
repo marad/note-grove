@@ -14,20 +14,22 @@ import editor.*
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.exists
+import kotlin.io.path.nameWithoutExtension
 import kotlin.io.path.notExists
 
 class WorkspaceState {
     val tabIndex = mutableIntStateOf(0)
     val tabs = mutableStateListOf<TabState>()
 
-    fun addTab(title: String, file: Path, activateNewTab: Boolean = true, defaultContent: String = "") {
+    fun addTab(file: Path, activateNewTab: Boolean = true, defaultContent: String = "") {
+        val title = file.nameWithoutExtension
         val existingTabIndex = tabIndex(file)
         if (existingTabIndex != null) {
             if (activateNewTab) {
                 setActiveTab(existingTabIndex)
             }
         } else {
-            tabs.add(TabState(title, file, defaultContent = defaultContent))
+            tabs.add(TabState(file, defaultContent = defaultContent))
             if (activateNewTab) {
                 setActiveTab(tabs.size - 1)
             }
@@ -106,14 +108,10 @@ fun Workspace(state: WorkspaceState, onRequestCompletions: (state: TabState, que
     }
 }
 
-class TabState(title: String = "<unknown>", val file: Path, val vimMode: Boolean = false, defaultContent: String = "") {
-    val title = mutableStateOf(title)
+class TabState(val file: Path, val vimMode: Boolean = false, defaultContent: String = "") {
+    val title = file.nameWithoutExtension
     val editorViewModel = EditorViewModel(readContentIfExists(defaultContent), file.notExists())
     val vimModeViewModel = VimModeViewModel(editorViewModel)
-
-    fun updateTitle(newTitle: String) {
-        title.value = newTitle
-    }
 
     private fun readContentIfExists(defaultContent: String): String =
         if (file.exists()) {
@@ -135,7 +133,7 @@ fun WorkspaceTab(state: TabState,
     Tab(
         text = {
             Row {
-                Text(state.title.value, Modifier
+                Text(state.title, Modifier
                     .align(Alignment.CenterVertically)
                 )
                 if (editorState.dirty) {
