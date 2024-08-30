@@ -194,12 +194,14 @@ fun main() = application {
     val followLinkAction = createFollowLinkAction(appVm)
     val showNoteSearchDialog = createSearchNoteAction(appVm, appActions)
     val showActionSearchDialog = createSearchActionsAction(appVm, appActions)
-    val openDailyNote = openDailyNote(appVm)
+    val openDailyNote = createOpenDailyNoteAction(appVm)
+    val previousDailyNote = createPreviousDailyNoteAction(appVm)
+    val nextDailyNote = createNextDailyNoteAction(appVm)
 
     appActions.addAll(listOf(
         saveAction, closeTabAction, newNoteAction, deleteNoteAction, renameNoteAction, selectRootAction,
         cycleRootAction, createRefactorHierarchyAction(appVm), followLinkAction, showNoteSearchDialog,
-        showActionSearchDialog, openDailyNote
+        showActionSearchDialog, openDailyNote, previousDailyNote, nextDailyNote
     ))
 
     appActions.sortBy { it.name }
@@ -213,6 +215,8 @@ fun main() = application {
     shortcuts.add(Shortcut(Key.P, KeyModifier.Ctrl), showNoteSearchDialog)
     shortcuts.add(Shortcut(Key.P, KeyModifier.Ctrl, KeyModifier.Shift), showActionSearchDialog)
     shortcuts.add(Shortcut(Key.D, KeyModifier.Ctrl), openDailyNote)
+    shortcuts.add(Shortcut(Key.U, KeyModifier.Ctrl), previousDailyNote)
+    shortcuts.add(Shortcut(Key.I, KeyModifier.Ctrl), nextDailyNote)
 
 
     Window(

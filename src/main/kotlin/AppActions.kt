@@ -180,13 +180,35 @@ fun createFollowLinkAction(appVm: AppViewModel): Action {
     }
 }
 
-fun openDailyNote(appVm: AppViewModel): Action {
-    return Action("Open daily journal note") {
+fun createOpenDailyNoteAction(appVm: AppViewModel): Action =
+    Action("Open daily journal note") {
         val root = appVm.state.value.root
-        val date = LocalDate.now()
-        val path = root.pathToFile("daily.journal.${date.year}.${date.monthValue}.${date.dayOfMonth}.md")
+        val path = root.pathToFile(Journal.todaysDailyNote())
         val title = path.nameWithoutExtension
         val content = Templates.newNote(root, title, "template.journal")
         appVm.state.value.workspace.addTab(path, content)
     }
-}
+
+fun createPreviousDailyNoteAction(appVm: AppViewModel): Action =
+    Action("Open previous daily journal note") {
+        val root = appVm.state.value.root
+        val activeTab = appVm.state.value.workspace.activeTab()
+        val currentTitle = activeTab?.path?.nameWithoutExtension
+        val date = currentTitle?.let(Journal::getJournalDate) ?: LocalDate.now()
+        val previousNote = Journal.previousDailyNote(root, date)
+        if (previousNote != null) {
+            appVm.state.value.workspace.addTab(previousNote)
+        }
+    }
+
+fun createNextDailyNoteAction(appVm: AppViewModel): Action =
+    Action("Open next daily journal note") {
+        val root = appVm.state.value.root
+        val activeTab = appVm.state.value.workspace.activeTab()
+        val currentTitle = activeTab?.path?.nameWithoutExtension
+        val date = currentTitle?.let(Journal::getJournalDate) ?: LocalDate.now()
+        val nextNote = Journal.nextDailyNote(root, date)
+        if (nextNote != null) {
+            appVm.state.value.workspace.addTab(nextNote)
+        }
+    }
