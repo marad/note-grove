@@ -184,9 +184,7 @@ fun createOpenDailyNoteAction(appVm: AppViewModel): Action =
     Action("Open daily journal note") {
         val root = appVm.state.value.root
         val path = root.pathToFile(Journal.todaysDailyNote())
-        val title = path.nameWithoutExtension
-        val content = Templates.newNote(root, title, "templates.daily")
-        appVm.state.value.workspace.addTab(path, content)
+        appVm.openFile(path, "templates.daily")
     }
 
 fun createPreviousDailyNoteAction(appVm: AppViewModel): Action =
@@ -197,7 +195,7 @@ fun createPreviousDailyNoteAction(appVm: AppViewModel): Action =
         val date = currentTitle?.let(Journal::getJournalDate) ?: LocalDate.now()
         val previousNote = Journal.previousDailyNote(root, date)
         if (previousNote != null) {
-            appVm.state.value.workspace.addTab(previousNote)
+            appVm.openFile(previousNote, "templates.daily")
         }
     }
 
@@ -209,6 +207,52 @@ fun createNextDailyNoteAction(appVm: AppViewModel): Action =
         val date = currentTitle?.let(Journal::getJournalDate) ?: LocalDate.now()
         val nextNote = Journal.nextDailyNote(root, date)
         if (nextNote != null) {
-            appVm.state.value.workspace.addTab(nextNote)
+            appVm.openFile(nextNote, "templates.daily")
+        } else {
+            val nextDay = date.plusDays(1)
+            val noteName = Journal.formatJournalNoteName(nextDay)
+            val path = root.pathToFile(noteName)
+            appVm.openFile(path, "templates.daily")
+        }
+    }
+
+
+fun createOpenWeeklyNoteAction(appVm: AppViewModel): Action =
+    Action("Open weekly note") {
+        val root = appVm.state.value.root
+        val path = root.pathToFile(Weekly.getCurrentWeeklyNote())
+        appVm.openFile(path, "templates.weekly")
+    }
+
+fun createPreviousWeeklyNoteAction(appVm: AppViewModel): Action =
+    Action("Open previous weekly note") {
+        val root = appVm.state.value.root
+        val activeTab = appVm.state.value.workspace.activeTab()
+        val currentTitle = activeTab?.path?.nameWithoutExtension
+        currentTitle?.let { Weekly.getWeekAndYear(it) }?.let {
+            val (week, year) = it
+            val previousNote = Weekly.getPreviousWeeklyNote(root, week, year)
+            if (previousNote != null) {
+                appVm.openFile(previousNote, "templates.weekly")
+            }
+        }
+    }
+
+fun createNextWeeklyNoteAction(appVm: AppViewModel): Action =
+    Action("Open next weekly note") {
+        val root = appVm.state.value.root
+        val activeTab = appVm.state.value.workspace.activeTab()
+        val currentTitle = activeTab?.path?.nameWithoutExtension
+        currentTitle?.let { Weekly.getWeekAndYear(it) }?.let {
+            val (week, year) = it
+            val nextNote = Weekly.getNextWeeklyNote(root, week, year)
+            if (nextNote != null) {
+                appVm.openFile(nextNote, "templates.weekly")
+            } else {
+                val nextWeekFirstDay = Weekly.getFirstDayOfWeek(week, year).plusWeeks(1)
+                val noteName = Weekly.formatWeeklyNoteName(Weekly.getWeek(nextWeekFirstDay), nextWeekFirstDay.year)
+                val path = root.pathToFile(noteName)
+                appVm.openFile(path, "templates.weekly")
+            }
         }
     }

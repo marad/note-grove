@@ -25,6 +25,7 @@ import config.AppConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.nio.file.Path
+import kotlin.io.path.nameWithoutExtension
 import kotlin.system.exitProcess
 
 
@@ -66,6 +67,13 @@ class AppViewModel(
         if (index != -1) {
             _state.value = _state.value.copy(activeRootIndex = index)
         }
+    }
+
+    fun openFile(path: Path, templateName: String = "templates.note") {
+        val root = state.value.root
+        val title = path.nameWithoutExtension
+        val defaultContent = Templates.newNote(root, title, templateName)
+        state.value.workspace.addTab(path, defaultContent)
     }
 }
 
@@ -197,11 +205,15 @@ fun main() = application {
     val openDailyNote = createOpenDailyNoteAction(appVm)
     val previousDailyNote = createPreviousDailyNoteAction(appVm)
     val nextDailyNote = createNextDailyNoteAction(appVm)
+    val openWeeklyNote = createOpenWeeklyNoteAction(appVm)
+    val previousWeeklyNote = createPreviousWeeklyNoteAction(appVm)
+    val nextWeeklyNote = createNextWeeklyNoteAction(appVm)
 
     appActions.addAll(listOf(
         saveAction, closeTabAction, newNoteAction, deleteNoteAction, renameNoteAction, selectRootAction,
         cycleRootAction, createRefactorHierarchyAction(appVm), followLinkAction, showNoteSearchDialog,
-        showActionSearchDialog, openDailyNote, previousDailyNote, nextDailyNote
+        showActionSearchDialog, openDailyNote, previousDailyNote, nextDailyNote,
+        openWeeklyNote, previousWeeklyNote, nextWeeklyNote
     ))
 
     appActions.sortBy { it.name }
