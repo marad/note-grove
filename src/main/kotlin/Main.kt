@@ -180,6 +180,7 @@ fun main() = application {
         )
     }
     val shortcuts = Shortcuts()
+    val appActions = mutableListOf<Action>()
 
     val appState by appVm.state.collectAsState()
 
@@ -191,6 +192,16 @@ fun main() = application {
     val selectRootAction = createSelectRootAction(appVm)
     val cycleRootAction = createCycleRootAction(appVm)
     val followLinkAction = createFollowLinkAction(appVm)
+    val showNoteSearchDialog = createSearchNoteAction(appVm, appActions)
+    val showActionSearchDialog = createSearchActionsAction(appVm, appActions)
+
+    appActions.addAll(listOf(
+        saveAction, closeTabAction, newNoteAction, deleteNoteAction, renameNoteAction, selectRootAction,
+        cycleRootAction, createRefactorHierarchyAction(appVm), followLinkAction, showNoteSearchDialog,
+        showActionSearchDialog
+    ))
+
+    appActions.sortBy { it.name }
 
     shortcuts.add(Shortcut(Key.S, KeyModifier.Ctrl), saveAction)
     shortcuts.add(Shortcut(Key.W, KeyModifier.Ctrl), closeTabAction)
@@ -198,21 +209,9 @@ fun main() = application {
     shortcuts.add(Shortcut(Key.R, KeyModifier.Ctrl, KeyModifier.Shift), selectRootAction)
     shortcuts.add(Shortcut(Key.R, KeyModifier.Ctrl), cycleRootAction)
     shortcuts.add(Shortcut(Key.G, KeyModifier.Ctrl), followLinkAction)
-
-
-
-    val appActions = mutableListOf(
-        saveAction, closeTabAction, newNoteAction, deleteNoteAction, renameNoteAction, selectRootAction,
-        cycleRootAction, createRefactorHierarchyAction(appVm), followLinkAction
-    )
-
-    val showNoteSearchDialog = createSearchNoteAction(appVm, appActions)
-    val showActionSearchDialog = createSearchActionsAction(appVm, appActions)
     shortcuts.add(Shortcut(Key.P, KeyModifier.Ctrl), showNoteSearchDialog)
     shortcuts.add(Shortcut(Key.P, KeyModifier.Ctrl, KeyModifier.Shift), showActionSearchDialog)
 
-    appActions.add(showNoteSearchDialog)
-    appActions.add(showActionSearchDialog)
 
     Window(
         title = "Note Grove - ${appState.currentRootName}",
