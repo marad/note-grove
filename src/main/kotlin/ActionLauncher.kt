@@ -35,7 +35,8 @@ data class LauncherState(
     val text: TextFieldValue = TextFieldValue(),
     val actions: List<Action> = listOf(),
     val selectedItem: Int = 0,
-    val searchActions: (String) -> List<Action> = { emptyList() }
+    val searchActions: (String) -> List<Action> = { emptyList() },
+    val placeholder: String = "Type to select..."
 ) {
     fun selectNext() = copy(selectedItem = (selectedItem+1)
         .coerceIn(0, (actions.size-1).coerceAtLeast(0)))
@@ -92,14 +93,17 @@ class LauncherViewModel : ViewModel() {
         }
     }
 
-    fun show(initialQuery: String? = null, searchActions: (String) -> List<Action>) {
+    fun show(initialQuery: String? = null,
+             placeholder: String = "Type to select...",
+             searchActions: (String) -> List<Action>) {
         val finalQuery = initialQuery ?: _state.value.text.text
         _state.value = LauncherState(
             visible = true,
             text = _state.value.text.copy(text = finalQuery, selection = TextRange(finalQuery.length)),
             selectedItem = 0,
             actions = searchActions(finalQuery),
-            searchActions = searchActions)
+            searchActions = searchActions,
+            placeholder = placeholder)
     }
 
     fun hide() {
@@ -132,7 +136,6 @@ fun ActionLauncherDialog(vm: LauncherViewModel,
 
 @Composable
 fun ActionLauncher(vm: LauncherViewModel,
-                   placeholder: String = "Type to select...",
                    onComplete: (Action) -> Unit = {},
                    onCancel: () -> Unit = {}
 ) {
@@ -182,7 +185,7 @@ fun ActionLauncher(vm: LauncherViewModel,
                 onValueChange = vm::textFieldChanged,
                 singleLine = true,
                 placeholder = {
-                    Text(placeholder, color = Color.LightGray)
+                    Text(state.placeholder, color = Color.LightGray)
                 },
                 modifier = Modifier.fillMaxWidth()
                     .focusRequester(searchFieldFocusRequester)

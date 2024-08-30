@@ -208,12 +208,13 @@ fun main() = application {
     val openWeeklyNote = createOpenWeeklyNoteAction(appVm)
     val previousWeeklyNote = createPreviousWeeklyNoteAction(appVm)
     val nextWeeklyNote = createNextWeeklyNoteAction(appVm)
+    val insertTemplate = createInsertTemplateAction(appVm)
 
     appActions.addAll(listOf(
         saveAction, closeTabAction, newNoteAction, deleteNoteAction, renameNoteAction, selectRootAction,
         cycleRootAction, createRefactorHierarchyAction(appVm), followLinkAction, showNoteSearchDialog,
         showActionSearchDialog, openDailyNote, previousDailyNote, nextDailyNote,
-        openWeeklyNote, previousWeeklyNote, nextWeeklyNote
+        openWeeklyNote, previousWeeklyNote, nextWeeklyNote, insertTemplate
     ))
 
     appActions.sortBy { it.name }

@@ -256,3 +256,26 @@ fun createNextWeeklyNoteAction(appVm: AppViewModel): Action =
             }
         }
     }
+
+
+fun createInsertTemplateAction(appVm: AppViewModel): Action =
+    Action("Insert template", "Inserts template at cursor position") {
+
+        // select template
+        appVm.actionLauncherViewModel.show("", placeholder = "Select a template...") { query ->
+            val root = appVm.state.value.root
+            val templates = root.searchFiles("templates.", { entry, pattern -> entry.startsWith(pattern)} )
+                .map { it.removePrefix("") }
+
+            templates.filter { it.contains(query, ignoreCase = true) }
+                .map { template ->
+                    Action(template) {
+                        val activeTab = appVm.state.value.workspace.activeTab()
+                        val editorViewModel = activeTab?.editorViewModel
+                        val cursor = editorViewModel?.state?.value?.content?.selection?.start ?: 0
+                        val templateContent = Templates.loadTemplateOrDefault(root, template)
+                        editorViewModel?.insert(templateContent, cursor)
+                    }
+                }
+        }
+    }
