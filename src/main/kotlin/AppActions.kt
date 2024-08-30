@@ -1,6 +1,8 @@
 import com.vladsch.flexmark.util.ast.NodeVisitor
 import files.internal.MatchingStrategy
 import java.nio.file.Files
+import java.time.LocalDate
+import kotlin.io.path.nameWithoutExtension
 
 private fun searchActions(appVm: AppViewModel, appActions: List<Action>, name: String): List<Action> {
     return if (name.startsWith(">")) {
@@ -175,5 +177,16 @@ fun createFollowLinkAction(appVm: AppViewModel): Action {
         if (Files.exists(path)) {
             appVm.state.value.workspace.addTab(path)
         }
+    }
+}
+
+fun openDailyNote(appVm: AppViewModel): Action {
+    return Action("Open daily journal note") {
+        val root = appVm.state.value.root
+        val date = LocalDate.now()
+        val path = root.pathToFile("daily.journal.${date.year}.${date.monthValue}.${date.dayOfMonth}.md")
+        val title = path.nameWithoutExtension
+        val content = Templates.newNote(root, title, "template.journal")
+        appVm.state.value.workspace.addTab(path, content)
     }
 }
