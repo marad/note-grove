@@ -11,9 +11,11 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 
 class CompletionsState() {
+    val offset = mutableStateOf(IntOffset.Zero)
     private val visible = mutableStateOf(false)
     private val startOffset = mutableStateOf(0)
     private val items = mutableStateListOf<String>()
@@ -49,6 +51,7 @@ class CompletionsState() {
 @Composable
 fun Completions(state: CompletionsState, modifier: Modifier = Modifier) {
     Column(modifier = modifier
+        .offset { state.offset.value  }
         .background(MaterialTheme.colors.surface)
         .padding(5.dp)
         .width(IntrinsicSize.Max)

@@ -1,3 +1,4 @@
+import com.vladsch.flexmark.ext.wikilink.WikiLink
 import com.vladsch.flexmark.ext.wikilink.WikiLinkExtension
 import com.vladsch.flexmark.ext.yaml.front.matter.YamlFrontMatterExtension
 import com.vladsch.flexmark.ext.yaml.front.matter.YamlFrontMatterNode
@@ -5,6 +6,7 @@ import com.vladsch.flexmark.formatter.Formatter
 import com.vladsch.flexmark.parser.Parser
 import com.vladsch.flexmark.util.ast.Document
 import com.vladsch.flexmark.util.ast.Node
+import com.vladsch.flexmark.util.ast.NodeVisitor
 import com.vladsch.flexmark.util.ast.VisitHandler
 import com.vladsch.flexmark.util.data.MutableDataSet
 import com.vladsch.flexmark.util.sequence.BasedSequence
@@ -66,5 +68,20 @@ object Markdown {
                 node.document.chars = node.document.chars.replace(range.start, range.end, value)
             }
         }
+    }
+
+    fun findLink(content: String, cursor: Int): String {
+        val document = parse(content)
+        var result = ""
+        val visitor = NodeVisitor(
+            VisitHandler(WikiLink::class.java) {
+                val link = it.link
+                if (link.startOffset <= cursor && link.endOffset >= cursor) {
+                    result = link.substring(0)
+                }
+            }
+        )
+        visitor.visit(document)
+        return result
     }
 }

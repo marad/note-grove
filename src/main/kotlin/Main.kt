@@ -191,17 +191,20 @@ fun main() = application {
     val renameNoteAction = createRenameNoteAction(appVm)
     val selectRootAction = createSelectRootAction(appVm)
     val cycleRootAction = createCycleRootAction(appVm)
+    val followLinkAction = createFollowLinkAction(appVm)
 
     shortcuts.add(Shortcut(Key.S, KeyModifier.Ctrl), saveAction)
     shortcuts.add(Shortcut(Key.W, KeyModifier.Ctrl), closeTabAction)
     shortcuts.add(Shortcut(Key.N, KeyModifier.Ctrl), newNoteAction)
     shortcuts.add(Shortcut(Key.R, KeyModifier.Ctrl, KeyModifier.Shift), selectRootAction)
     shortcuts.add(Shortcut(Key.R, KeyModifier.Ctrl), cycleRootAction)
+    shortcuts.add(Shortcut(Key.G, KeyModifier.Ctrl), followLinkAction)
+
 
 
     val appActions = mutableListOf(
         saveAction, closeTabAction, newNoteAction, deleteNoteAction, renameNoteAction, selectRootAction,
-        cycleRootAction, createRefactorHierarchyAction(appVm)
+        cycleRootAction, createRefactorHierarchyAction(appVm), followLinkAction
     )
 
     val showNoteSearchDialog = createSearchNoteAction(appVm, appActions)

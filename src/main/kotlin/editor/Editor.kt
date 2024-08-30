@@ -3,7 +3,6 @@ package editor
 import Markdown
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -19,8 +18,10 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.getTextBeforeSelection
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -30,6 +31,21 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 val editorFont = FontFamily("JetBrainsMono Nerd Font")
 
 
+fun calculateCompletionsOffset(
+    layout: TextLayoutResult,
+    content: TextFieldValue,
+    density: Float
+): IntOffset {
+    val offset = (content.selection.start - 1).coerceAtLeast(0)
+    val left = layout.getHorizontalPosition(offset, true)
+    val top = layout.getLineBottom(layout.getLineForOffset(offset))
+
+    return IntOffset(
+        (left / density).toInt(),
+        (top / density).toInt()
+    )
+}
+
 @Composable
 fun Editor(vm: EditorViewModel = viewModel { EditorViewModel() },
            modifier: Modifier = Modifier,
@@ -37,18 +53,13 @@ fun Editor(vm: EditorViewModel = viewModel { EditorViewModel() },
            onTextLayout: (TextLayoutResult) -> Unit = {},
            onRequestCompletions: (String) -> List<String> = { emptyList() }) {
     val state by vm.state.collectAsState()
-    val layout = vm.layout
+    val density = LocalDensity.current.density
+
     Box(modifier) {
         BasicTextField(
             value = state.content,
             cursorBrush = cursorBrush,
             onValueChange = {
-                val before = it.getTextBeforeSelection(2).text
-                if (before == "[[") {
-                    vm.completionsState.startCompletion(
-                        it.selection.end.coerceAtLeast(0)
-                    )
-                }
                 if (vm.completionsState.isVisible()) {
                     if (vm.completionsState.getStartOffset() > it.selection.end) {
                         vm.completionsState.hide()
@@ -88,6 +99,16 @@ fun Editor(vm: EditorViewModel = viewModel { EditorViewModel() },
                             return@onPreviewKeyEvent true
                         }
                     }
+
+                    if (it.key == Key.LeftBracket && it.type == KeyEventType.KeyUp) {
+                        val before = state.content.getTextBeforeSelection(2).text
+                        if (before == "[[") {
+                            val offset = state.content.selection.end.coerceAtLeast(0)
+                            vm.completionsState.startCompletion(offset)
+                            val items = onRequestCompletions("")
+                            vm.completionsState.setItems(items)
+                        }
+                    }
                     return@onPreviewKeyEvent false
                 }
                 .focusRequester(vm.focusRequester),
@@ -101,22 +122,13 @@ fun Editor(vm: EditorViewModel = viewModel { EditorViewModel() },
             },
             onTextLayout = {
                 vm.layout = it
+                vm.completionsState.offset.value = calculateCompletionsOffset(it, state.content, density)
                 onTextLayout(it)
             }
         )
 
-
         if (vm.completionsState.isVisible()) {
-            if (layout != null) {
-                val offset = (state.content.selection.start-1).coerceAtLeast(0)
-                val left = layout.getHorizontalPosition(offset, true)
-                val top = layout.getLineBottom(layout.getLineForOffset(offset))
-                val density = LocalDensity.current.density
-                Completions(
-                    vm.completionsState,
-                    Modifier.offset((left / density).dp, (top / density).dp)
-                )
-            }
+            Completions(vm.completionsState)
         }
     }
     LaunchedEffect(state) {

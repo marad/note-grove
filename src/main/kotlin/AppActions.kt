@@ -169,3 +169,19 @@ fun createRefactorHierarchyAction(appVm: AppViewModel): Action =
             }
         }
     }
+
+
+fun createFollowLinkAction(appVm: AppViewModel): Action {
+    return Action("Follow link", "Follows link under cursor") {
+        val activeTab = appVm.state.value.workspace.activeTab()
+        val editorViewModel = activeTab?.editorViewModel
+        val content = editorViewModel?.content?.text ?: ""
+        val cursor = editorViewModel?.state?.value?.content?.selection?.start ?: 0
+
+        val link = Markdown.findLink(content, cursor)
+        val path = appVm.state.value.root.pathToFile(link)
+        if (Files.exists(path)) {
+            appVm.state.value.workspace.addTab(path)
+        }
+    }
+}
