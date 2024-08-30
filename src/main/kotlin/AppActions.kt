@@ -70,7 +70,7 @@ fun newNoteAction(appVm: AppViewModel): Action =
 
             val path = root.pathToFile(fileName)
             val title = fileName.split(".").last()
-            val content = Templates.newNote(root, title, "template.note")
+            val content = Templates.newNote(root, title, "templates.note")
             appVm.state.value.workspace.addTab(path, content)
         }
 
@@ -185,7 +185,7 @@ fun createOpenDailyNoteAction(appVm: AppViewModel): Action =
         val root = appVm.state.value.root
         val path = root.pathToFile(Journal.todaysDailyNote())
         val title = path.nameWithoutExtension
-        val content = Templates.newNote(root, title, "template.journal")
+        val content = Templates.newNote(root, title, "templates.daily")
         appVm.state.value.workspace.addTab(path, content)
     }
 
