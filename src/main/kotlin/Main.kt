@@ -78,7 +78,6 @@ fun App(appVm: AppViewModel, onRequestCompletions: (tabViewModel: TabViewModel, 
     Row(Modifier.fillMaxSize()) {
         ToolBar(
             onFilesClicked = {
-                println("Adding tab")
                 state.workspace.addTab(Path.of("/tmp/testfile.md"))
             }
         )

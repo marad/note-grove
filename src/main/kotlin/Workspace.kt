@@ -27,14 +27,14 @@ class WorkspaceViewModel : ViewModel() {
     val state = _state.asStateFlow()
     val tabs = mutableStateListOf<TabViewModel>()
 
-    fun addTab(file: Path, activateNewTab: Boolean = true) {
+    fun addTab(file: Path, content: String = "", activateNewTab: Boolean = true) {
         val existingTabIndex = tabIndex(file)
         if (existingTabIndex != null) {
             if (activateNewTab) {
                 setActiveTab(existingTabIndex)
             }
         } else {
-            tabs.add(TabViewModel(file))
+            tabs.add(TabViewModel(file, defaultContent = content))
             if (activateNewTab) {
                 setActiveTab(tabs.size - 1)
             }

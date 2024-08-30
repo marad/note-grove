@@ -132,7 +132,7 @@ fun ActionLauncherDialog(vm: LauncherViewModel,
 
 @Composable
 fun ActionLauncher(vm: LauncherViewModel,
-                   placeholder: String = "Type to search...",
+                   placeholder: String = "Type to select...",
                    onComplete: (Action) -> Unit = {},
                    onCancel: () -> Unit = {}
 ) {

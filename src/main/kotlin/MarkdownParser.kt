@@ -1,5 +1,6 @@
 import com.vladsch.flexmark.ext.wikilink.WikiLink
 import com.vladsch.flexmark.ext.wikilink.WikiLinkExtension
+import com.vladsch.flexmark.ext.yaml.front.matter.YamlFrontMatterBlock
 import com.vladsch.flexmark.ext.yaml.front.matter.YamlFrontMatterExtension
 import com.vladsch.flexmark.ext.yaml.front.matter.YamlFrontMatterNode
 import com.vladsch.flexmark.formatter.Formatter
@@ -83,5 +84,16 @@ object Markdown {
         )
         visitor.visit(document)
         return result
+    }
+
+    fun removeFrontMatter(content: String): String {
+        val document = parse(content)
+        return if (document.firstChild is YamlFrontMatterBlock) {
+            val frontMatter = document.firstChild!!
+            val range = frontMatter.sourceRange
+            content.substring(range.end)
+        } else {
+            content
+        }.trimStart()
     }
 }

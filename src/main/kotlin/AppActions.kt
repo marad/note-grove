@@ -67,17 +67,9 @@ fun newNoteAction(appVm: AppViewModel): Action =
             val root = appVm.state.value.root
 
             val path = root.pathToFile(fileName)
-            val content = """
-                |---
-                |title: ${fileName.split(".").last()}
-                |description: ''
-                |created: ${System.currentTimeMillis()}
-                |updated: ${System.currentTimeMillis()}
-                |---
-                |
-                |
-            """.trimMargin()
-            appVm.state.value.workspace.addTab(path)
+            val title = fileName.split(".").last()
+            val content = Templates.newNote(root, title, "template.note")
+            appVm.state.value.workspace.addTab(path, content)
         }
 
     }
