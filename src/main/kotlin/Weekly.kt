@@ -25,11 +25,11 @@ object Weekly {
         return getFirstDayOfWeek(week, year).plusDays(6)
     }
 
-    fun formatWeeklyNoteName(week: Int, year: Int): String {
-        return "weekly.${year}.${week.toString().padStart(2, '0')}"
+    fun formatWeeklyNoteName(week: Int, year: Int): NoteName {
+        return NoteName("weekly.${year}.${week.toString().padStart(2, '0')}")
     }
 
-    fun getCurrentWeeklyNote(): String {
+    fun getCurrentWeeklyNote(): NoteName {
         val currentWeek = getWeek()
         return formatWeeklyNoteName(currentWeek, LocalDate.now().year)
     }

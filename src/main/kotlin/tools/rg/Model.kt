@@ -1,4 +1,4 @@
-package rg
+package tools.rg
 
 sealed interface Entry
 

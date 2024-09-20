@@ -1,6 +1,8 @@
-package rg
+package tools.rg
 
-import rg.internal.RgImpl
+import NoteName
+import Root
+import tools.rg.internal.RgImpl
 
 interface RgFacade {
     fun search(pattern: String, path: String): List<Entry>

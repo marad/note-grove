@@ -229,26 +229,3 @@ fun ActionItem(action: Action,
     }
 }
 
-
-@Composable
-@Preview
-fun test() {
-    val rootConfig = AppConfig.load(Paths.get("config.toml"))?.roots?.first() ?: throw IllegalStateException("No roots found")
-    val root = Root(rootConfig.path)
-    val vm = remember { LauncherViewModel() }
-
-    vm.show { name ->
-        val files = root.searchFiles(name)
-        files.map { Action(it) { println(it) } }
-    }
-
-    ActionLauncherDialog(vm)
-}
-
-fun main() {
-    singleWindowApplication(
-        WindowState(size = DpSize(1000.dp, 800.dp))
-    ) {
-        test()
-    }
-}

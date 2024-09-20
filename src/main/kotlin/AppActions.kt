@@ -14,7 +14,7 @@ private fun searchActions(appVm: AppViewModel, appActions: List<Action>, name: S
     } else {
         val root = appVm.state.value.root
         root.searchFiles(name).map {
-            Action(it) {
+            Action(it.name) {
                 appVm.state.value.workspace.addTab(root.pathToFile(it))
             }
         }
@@ -68,9 +68,9 @@ fun newNoteAction(appVm: AppViewModel): Action =
         appVm.actionLauncherViewModel.showInput(initialQuery = title ?: "") { fileName ->
             val root = appVm.state.value.root
 
-            val path = root.pathToFile(fileName)
+            val path = root.pathToFile(NoteName(fileName))
             val title = fileName.split(".").last()
-            val content = Templates.newNote(root, title, "templates.note")
+            val content = Templates.newNote(root, title, NoteName("templates.note"))
             appVm.state.value.workspace.addTab(path, content)
         }
 
@@ -106,7 +106,7 @@ fun createRenameNoteAction(appVm: AppViewModel): Action =
             val title = activeTab.title
             appVm.actionLauncherViewModel.showInput(initialQuery = title) { newTitle ->
                 val root = appVm.state.value.root
-                val path = root.pathToFile(newTitle)
+                val path = root.pathToFile(NoteName(newTitle))
                 val content = activeTab.editorViewModel.content.text
                 Files.write(path, content.toByteArray())
                 activeTab.path.let { Files.delete(it) }
@@ -143,16 +143,16 @@ fun createRefactorHierarchyAction(appVm: AppViewModel): Action =
         appVm.actionLauncherViewModel.show(initialQuery = name) { srcPattern ->
             val files = root.searchFiles(srcPattern, MatchingStrategy::contains)
             files.map { file ->
-                Action(file) {
+                Action(file.name) {
                     // show input dialog to get the destination pattern
                     appVm.actionLauncherViewModel.show { dstPattern ->
                         files.map {
-                            Action("$it > ${it.replace(srcPattern, dstPattern)}") {
+                            Action("${it.name} > ${it.name.replace(srcPattern, dstPattern)}") {
                                 // rename selected files
                                 files.forEach { oldFileName ->
-                                    val newFileName = oldFileName.replace(srcPattern, dstPattern)
+                                    val newFileName = oldFileName.name.replace(srcPattern, dstPattern)
                                     val oldPath = root.pathToFile(oldFileName)
-                                    val newPath = root.pathToFile(newFileName)
+                                    val newPath = root.pathToFile(NoteName(newFileName))
                                     Files.move(oldPath, newPath)
                                     appVm.state.value.workspace.updateTabFile(oldPath, newPath)
                                 }
@@ -173,7 +173,7 @@ fun createFollowLinkAction(appVm: AppViewModel): Action {
         val cursor = editorViewModel?.state?.value?.content?.selection?.start ?: 0
 
         val link = Markdown.findLink(content, cursor)
-        val path = appVm.state.value.root.pathToFile(link)
+        val path = appVm.state.value.root.pathToFile(NoteName(link))
         if (Files.exists(path)) {
             appVm.state.value.workspace.addTab(path)
         }
@@ -265,7 +265,7 @@ fun createInsertTemplateAction(appVm: AppViewModel): Action =
         appVm.actionLauncherViewModel.show("", placeholder = "Select a template...") { query ->
             val root = appVm.state.value.root
             val templates = root.searchFiles("templates.", { entry, pattern -> entry.startsWith(pattern)} )
-                .map { it.removePrefix("") }
+                .map { it.name.removePrefix("") }
 
             templates.filter { it.contains(query, ignoreCase = true) }
                 .map { template ->
@@ -273,7 +273,7 @@ fun createInsertTemplateAction(appVm: AppViewModel): Action =
                         val activeTab = appVm.state.value.workspace.activeTab()
                         val editorViewModel = activeTab?.editorViewModel
                         val cursor = editorViewModel?.state?.value?.content?.selection?.start ?: 0
-                        val templateContent = Templates.loadTemplateOrDefault(root, template)
+                        val templateContent = Templates.loadTemplateOrDefault(root, NoteName(template))
                         editorViewModel?.insert(templateContent, cursor)
                     }
                 }

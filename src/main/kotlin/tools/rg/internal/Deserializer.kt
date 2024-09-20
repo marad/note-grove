@@ -1,7 +1,14 @@
-package rg.internal
+package tools.rg.internal
 
 import com.google.gson.*
-import rg.*
+import tools.rg.Begin
+import tools.rg.Elapsed
+import tools.rg.End
+import tools.rg.Entry
+import tools.rg.Match
+import tools.rg.Stats
+import tools.rg.Submatch
+import tools.rg.Summary
 import java.lang.reflect.Type
 
 class EntryDeserializer(private val gson: Gson = Gson()) : JsonDeserializer<Entry> {
@@ -41,7 +48,8 @@ class EntryDeserializer(private val gson: Gson = Gson()) : JsonDeserializer<Entr
             obj.getAsJsonObject("lines").getTextField(),
             obj.get("line_number").asInt,
             obj.get("absolute_offset").asInt,
-            obj.readSubmatches())
+            obj.readSubmatches()
+        )
     }
 
     fun readEnd(obj: JsonObject): End {

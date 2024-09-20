@@ -4,7 +4,7 @@ import kotlin.io.path.exists
 
 object Templates {
 
-    fun newNote(root: Root, title: String, templateName: String): String {
+    fun newNote(root: Root, title: String, templateName: NoteName): String {
         val template = defaultFrontMatter + "\n" + loadTemplateOrDefault(root, templateName)
         return ST(template).apply {
             add("title", title)
@@ -12,7 +12,7 @@ object Templates {
         }.render()
     }
 
-    fun loadTemplateOrDefault(root: Root, name: String, default: String = ""): String {
+    fun loadTemplateOrDefault(root: Root, name: NoteName, default: String = ""): String {
         val path = root.pathToFile(name)
         return if (path.exists()) {
             Files.readString(path).let(Markdown::removeFrontMatter)

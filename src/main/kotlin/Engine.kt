@@ -2,6 +2,9 @@ import files.FilesFacade
 import files.internal.MatchingStrategy
 import rg.Entry
 import rg.RgFacade
+import tools.rg.Begin
+import tools.rg.Entry
+import tools.rg.RgFacade
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -19,6 +22,10 @@ fun main() {
     val h = root.getHierarchy()
 }
 
+@JvmInline
+value class NoteName(val name: String) {
+    override fun toString(): String = name
+}
 
 class Root(private val path: String) {
     private val files = FilesFacade.create()
@@ -26,13 +33,14 @@ class Root(private val path: String) {
 
     fun getHierarchy(): Hierarchy = Hierarchy(path)
 
-    fun pathToFile(file: String): Path = Paths.get(path, "$file.md")
+    fun pathToFile(file: NoteName): Path = Paths.get(path, "$file.md")
+    fun fileToPath(file: Path): NoteName = NoteName(file.nameWithoutExtension)
 
-    fun searchFiles(pattern: String, strategy: (String,String)->Boolean = MatchingStrategy::fuzzy): List<String> =
-        files.search(pattern, path, strategy)
+    fun searchFiles(pattern: String, strategy: (String,String)->Boolean = MatchingStrategy::fuzzy): List<NoteName> =
+        files.search(pattern, path, strategy).map { NoteName(it) }
 
 
-    fun search(pattern: String): List<Entry> =
+    fun searchInFiles(pattern: String): List<Entry> =
         rg.search(pattern, path)
 
 }

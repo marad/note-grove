@@ -11,10 +11,10 @@ object Journal {
         return LocalDate.of(year.toInt(), month.toInt(), day.toInt())
     }
 
-    fun formatJournalNoteName(date: LocalDate): String =
-        "daily.journal.${date.year}.${date.monthValue.toString().padStart(2, '0')}.${date.dayOfMonth.toString().padStart(2, '0')}"
+    fun formatJournalNoteName(date: LocalDate): NoteName =
+        NoteName("daily.journal.${date.year}.${date.monthValue.toString().padStart(2, '0')}.${date.dayOfMonth.toString().padStart(2, '0')}")
 
-    fun todaysDailyNote(): String = formatJournalNoteName(LocalDate.now())
+    fun todaysDailyNote(): NoteName = formatJournalNoteName(LocalDate.now())
 
     fun previousDailyNote(root: Root, date: LocalDate, maxDaysBack: Int = 60): Path? {
         var maxDaysBack = maxDaysBack

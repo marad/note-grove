@@ -1,8 +1,8 @@
-package rg.internal
+package tools.rg.internal
 
 import com.google.gson.GsonBuilder
-import rg.Entry
-import rg.RgFacade
+import tools.rg.Entry
+import tools.rg.RgFacade
 import java.io.BufferedReader
 import java.io.InputStreamReader
 

@@ -72,7 +72,7 @@ class AppViewModel(
     fun openFile(path: Path, templateName: String = "templates.note") {
         val root = state.value.root
         val title = path.nameWithoutExtension
-        val defaultContent = Templates.newNote(root, title, templateName)
+        val defaultContent = Templates.newNote(root, title, NoteName(templateName))
         state.value.workspace.addTab(path, defaultContent)
     }
 }
@@ -156,7 +156,7 @@ fun FileList() {
 
     val scrollState = rememberScrollState()
 
-    var selected by remember { mutableStateOf("") }
+    var selected by remember { mutableStateOf(NoteName("")) }
 
     Column(
         Modifier.verticalScroll(scrollState)
@@ -164,9 +164,8 @@ fun FileList() {
             .width(200.dp)
     ) {
         for (file in files) {
-            Text(file, overflow = TextOverflow.Ellipsis, maxLines = 1,
+            Text(file.name, overflow = TextOverflow.Ellipsis, maxLines = 1,
                 modifier = Modifier.selectable(selected == file, onClick = {
-                    println("Selected $file")
                     selected = file
                 }))
 
@@ -242,7 +241,7 @@ fun main() = application {
             Surface {
                 App(appVm, onRequestCompletions = { tab, query ->
                     val root = appVm.state.value.root
-                    root.searchFiles(query)
+                    root.searchFiles(query).map { it.name }
                 })
             }
 
