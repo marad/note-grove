@@ -5,7 +5,6 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.unit.sp
 import com.vladsch.flexmark.ast.*
 import com.vladsch.flexmark.ext.wikilink.WikiLink
@@ -83,7 +82,6 @@ fun Document.highlighted(): AnnotatedString {
         VisitHandler(LinkRef::class.java) {
             appendUntil(it.startOffset)
 
-            ann.pushStyle(SpanStyle(baselineShift = BaselineShift.Superscript, fontSize = 12.sp))
             ann.pushStyle(grayedOut)
             appendUntil(max(it.childChars.startOffset, it.referenceOpeningMarker.endOffset))
             ann.pop()
@@ -94,7 +92,6 @@ fun Document.highlighted(): AnnotatedString {
 
             ann.pushStyle(grayedOut)
             appendUntil(it.endOffset)
-            ann.pop()
             ann.pop()
         },
         VisitHandler(Link::class.java) {
