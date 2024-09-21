@@ -1,7 +1,5 @@
 package tools.rg
 
-import NoteName
-import Root
 import tools.rg.internal.RgImpl
 
 interface RgFacade {

@@ -1,10 +1,9 @@
 import files.FilesFacade
 import files.internal.MatchingStrategy
-import rg.Entry
-import rg.RgFacade
 import tools.rg.Begin
 import tools.rg.Entry
 import tools.rg.RgFacade
+import tools.sed.SedFacade
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -30,6 +29,7 @@ value class NoteName(val name: String) {
 class Root(private val path: String) {
     private val files = FilesFacade.create()
     private val rg = RgFacade.create()
+    private val sed = SedFacade.create()
 
     fun getHierarchy(): Hierarchy = Hierarchy(path)
 
@@ -43,6 +43,18 @@ class Root(private val path: String) {
     fun searchInFiles(pattern: String): List<Entry> =
         rg.search(pattern, path)
 
+    fun renameNote(oldName: NoteName, newName: NoteName): List<NoteName> {
+        val updatedNotes = mutableListOf<NoteName>()
+        searchBacklinks(oldName).filterIsInstance<Begin>().forEach {
+            sed.replace(oldName.name, newName.name, it.path)
+            updatedNotes.add(fileToPath(Paths.get(it.path)))
+        }
+
+        val oldPath = pathToFile(oldName)
+        val newPath = pathToFile(newName)
+        Files.move(oldPath, newPath)
+        return updatedNotes
+    }
 }
 
 class Hierarchy(path: String) {

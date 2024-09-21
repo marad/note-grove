@@ -75,6 +75,28 @@ class AppViewModel(
         val defaultContent = Templates.newNote(root, title, NoteName(templateName))
         state.value.workspace.addTab(path, defaultContent)
     }
+
+    fun renameNote(oldName: NoteName, newName: NoteName) {
+        val root = state.value.root
+        val updatedNotes = root.renameNote(oldName, newName)
+        state.value.workspace.updateTabFile(root.pathToFile(oldName), root.pathToFile(newName))
+        updatedNotes.forEach {
+            state.value.workspace.reloadTabIfOpened(root.pathToFile(it))
+        }
+    }
+
+    fun refactorHierarchy(srcPattern: String, dstPattern: String, files: List<NoteName>) {
+        val root = state.value.root
+        val updatedNotes = mutableSetOf<NoteName>()
+        files.forEach {
+            val newName = NoteName(it.name.replace(srcPattern, dstPattern))
+            state.value.workspace.updateTabFile(root.pathToFile(it), root.pathToFile(newName))
+            updatedNotes.addAll(root.renameNote(it, newName))
+        }
+        updatedNotes.forEach {
+            state.value.workspace.reloadTabIfOpened(root.pathToFile(it))
+        }
+    }
 }
 
 @Composable
@@ -208,12 +230,13 @@ fun main() = application {
     val previousWeeklyNote = createPreviousWeeklyNoteAction(appVm)
     val nextWeeklyNote = createNextWeeklyNoteAction(appVm)
     val insertTemplate = createInsertTemplateAction(appVm)
+    val jumpToBacklink = createJumpToBacklinkAction(appVm)
 
     appActions.addAll(listOf(
         saveAction, closeTabAction, newNoteAction, deleteNoteAction, renameNoteAction, selectRootAction,
         cycleRootAction, createRefactorHierarchyAction(appVm), followLinkAction, showNoteSearchDialog,
         showActionSearchDialog, openDailyNote, previousDailyNote, nextDailyNote,
-        openWeeklyNote, previousWeeklyNote, nextWeeklyNote, insertTemplate
+        openWeeklyNote, previousWeeklyNote, nextWeeklyNote, insertTemplate, jumpToBacklink
     ))
 
     appActions.sortBy { it.name }
@@ -237,7 +260,8 @@ fun main() = application {
         onPreviewKeyEvent = shortcuts::handle,
         onCloseRequest = ::exitApplication) {
 
-        MaterialTheme(colors = lightColors(primary = Color(0.2f, 0.6f, 0.2f))) {
+        val primaryColor = Color(0.21f, 0.4f, 0.32f)
+        MaterialTheme(colors = lightColors(primary = primaryColor)) {
             Surface {
                 App(appVm, onRequestCompletions = { tab, query ->
                     val root = appVm.state.value.root

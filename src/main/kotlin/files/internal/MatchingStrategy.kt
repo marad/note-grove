@@ -10,6 +10,9 @@ object MatchingStrategy {
     }
 
     fun fuzzy(entry: String, pattern: String): Boolean {
+        if (pattern.isEmpty()) {
+            return true
+        }
         var current = 0
         val patternlc = pattern.lowercase()
         entry.lowercase().forEach { char ->

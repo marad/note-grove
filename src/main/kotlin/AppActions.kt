@@ -1,6 +1,8 @@
 import com.vladsch.flexmark.util.ast.NodeVisitor
 import files.internal.MatchingStrategy
+import tools.rg.Match
 import java.nio.file.Files
+import java.nio.file.Path
 import java.time.LocalDate
 import kotlin.io.path.nameWithoutExtension
 
@@ -105,12 +107,9 @@ fun createRenameNoteAction(appVm: AppViewModel): Action =
         if (activeTab != null) {
             val title = activeTab.title
             appVm.actionLauncherViewModel.showInput(initialQuery = title) { newTitle ->
-                val root = appVm.state.value.root
-                val path = root.pathToFile(NoteName(newTitle))
-                val content = activeTab.editorViewModel.content.text
-                Files.write(path, content.toByteArray())
-                activeTab.path.let { Files.delete(it) }
-                appVm.state.value.workspace.updateTabFile(activeTab.path, path)
+                val oldName = NoteName(title)
+                val newName = NoteName(newTitle)
+                appVm.renameNote(oldName, newName)
             }
         }
     }
@@ -148,14 +147,7 @@ fun createRefactorHierarchyAction(appVm: AppViewModel): Action =
                     appVm.actionLauncherViewModel.show { dstPattern ->
                         files.map {
                             Action("${it.name} > ${it.name.replace(srcPattern, dstPattern)}") {
-                                // rename selected files
-                                files.forEach { oldFileName ->
-                                    val newFileName = oldFileName.name.replace(srcPattern, dstPattern)
-                                    val oldPath = root.pathToFile(oldFileName)
-                                    val newPath = root.pathToFile(NoteName(newFileName))
-                                    Files.move(oldPath, newPath)
-                                    appVm.state.value.workspace.updateTabFile(oldPath, newPath)
-                                }
+                                appVm.refactorHierarchy(srcPattern, dstPattern, files)
                             }
                         }
                     }

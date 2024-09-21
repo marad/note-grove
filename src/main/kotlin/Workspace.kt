@@ -45,6 +45,10 @@ class WorkspaceViewModel : ViewModel() {
         findTab(oldFile)?.updateFile(newFile)
     }
 
+    fun reloadTabIfOpened(file: Path) {
+        findTab(file)?.reloadContent()
+    }
+
     fun nextTab() { setActiveTab(state.value.tabIndex+1) }
     fun prevTab() { setActiveTab(state.value.tabIndex-1) }
     fun closeTab(index: Int) {
@@ -137,6 +141,11 @@ class TabViewModel(path: Path, vimMode: Boolean = false, defaultContent: String 
 
     fun updateFile(newFile: Path) {
         _state.value = TabState(newFile, _state.value.vimMode)
+    }
+
+    fun reloadContent() {
+        val content = readContentIfExists("")
+        editorViewModel.updateContent(content, markDirty = false)
     }
 
     private fun readContentIfExists(defaultContent: String): String =
