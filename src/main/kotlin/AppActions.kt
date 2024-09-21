@@ -269,7 +269,7 @@ fun createInsertTemplateAction(appVm: AppViewModel): Action =
                         val activeTab = appVm.state.value.workspace.activeTab()
                         val editorViewModel = activeTab?.editorViewModel
                         val cursor = editorViewModel?.state?.value?.content?.selection?.start ?: 0
-                        val templateContent = Templates.loadTemplateOrDefault(root, NoteName(template))
+                        val templateContent = Templates.loadTemplate(root, NoteName(template))
                         editorViewModel?.insert(templateContent, cursor)
                     }
                 }
