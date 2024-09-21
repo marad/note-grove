@@ -1,6 +1,7 @@
 import com.vladsch.flexmark.util.ast.NodeVisitor
 import files.internal.MatchingStrategy
 import tools.rg.Match
+import java.awt.Desktop
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.LocalDate
@@ -167,8 +168,17 @@ fun createFollowLinkAction(appVm: AppViewModel): Action {
         val cursor = editorViewModel?.state?.value?.content?.selection?.start ?: 0
 
         val link = Markdown.findLink(content, cursor)
-        val noteName = NoteName(link)
-        appVm.openNote(noteName)
+        println(link)
+        if (link != null) {
+            if (link.startsWith("http")) {
+                if (Desktop.isDesktopSupported()) {
+                    Desktop.getDesktop().browse(java.net.URI(link))
+                }
+            } else {
+                val noteName = NoteName(link)
+                appVm.openNote(noteName)
+            }
+        }
     }
 }
 

@@ -1,3 +1,4 @@
+import com.vladsch.flexmark.ast.Link
 import com.vladsch.flexmark.ext.wikilink.WikiLink
 import com.vladsch.flexmark.ext.wikilink.WikiLinkExtension
 import com.vladsch.flexmark.ext.yaml.front.matter.YamlFrontMatterBlock
@@ -71,13 +72,19 @@ object Markdown {
         }
     }
 
-    fun findLink(content: String, cursor: Int): String {
+    fun findLink(content: String, cursor: Int): String? {
         val document = parse(content)
-        var result = ""
+        var result: String? = null
         val visitor = NodeVisitor(
             VisitHandler(WikiLink::class.java) {
                 val link = it.link
-                if (link.startOffset <= cursor && link.endOffset >= cursor) {
+                if (it.startOffset <= cursor && it.endOffset >= cursor) {
+                    result = link.substring(0)
+                }
+            },
+            VisitHandler(Link::class.java) {
+                val link = it.url
+                if (it.startOffset <= cursor && it.endOffset >= cursor) {
                     result = link.substring(0)
                 }
             }
