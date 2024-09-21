@@ -17,7 +17,7 @@ private fun searchActions(appVm: AppViewModel, appActions: List<Action>, name: S
         val root = appVm.state.value.root
         root.searchFiles(name).map {
             Action(it.name) {
-                appVm.state.value.workspace.addTab(root.pathToFile(it))
+                appVm.openNote(it)
             }
         }
     }
@@ -165,18 +165,14 @@ fun createFollowLinkAction(appVm: AppViewModel): Action {
         val cursor = editorViewModel?.state?.value?.content?.selection?.start ?: 0
 
         val link = Markdown.findLink(content, cursor)
-        val path = appVm.state.value.root.pathToFile(NoteName(link))
-        if (Files.exists(path)) {
-            appVm.state.value.workspace.addTab(path)
-        }
+        val noteName = NoteName(link)
+        appVm.openNote(noteName)
     }
 }
 
 fun createOpenDailyNoteAction(appVm: AppViewModel): Action =
     Action("Open daily journal note") {
-        val root = appVm.state.value.root
-        val path = root.pathToFile(Journal.todaysDailyNote())
-        appVm.openFile(path, "templates.daily")
+        appVm.openNote(Journal.todaysDailyNote(), "templates.daily")
     }
 
 fun createPreviousDailyNoteAction(appVm: AppViewModel): Action =
@@ -187,7 +183,7 @@ fun createPreviousDailyNoteAction(appVm: AppViewModel): Action =
         val date = currentTitle?.let(Journal::getJournalDate) ?: LocalDate.now()
         val previousNote = Journal.previousDailyNote(root, date)
         if (previousNote != null) {
-            appVm.openFile(previousNote, "templates.daily")
+            appVm.openNote(previousNote, "templates.daily")
         }
     }
 
@@ -199,21 +195,18 @@ fun createNextDailyNoteAction(appVm: AppViewModel): Action =
         val date = currentTitle?.let(Journal::getJournalDate) ?: LocalDate.now()
         val nextNote = Journal.nextDailyNote(root, date)
         if (nextNote != null) {
-            appVm.openFile(nextNote, "templates.daily")
+            appVm.openNote(nextNote, "templates.daily")
         } else {
             val nextDay = date.plusDays(1)
             val noteName = Journal.formatJournalNoteName(nextDay)
-            val path = root.pathToFile(noteName)
-            appVm.openFile(path, "templates.daily")
+            appVm.openNote(noteName, "templates.daily")
         }
     }
 
 
 fun createOpenWeeklyNoteAction(appVm: AppViewModel): Action =
     Action("Open weekly note") {
-        val root = appVm.state.value.root
-        val path = root.pathToFile(Weekly.getCurrentWeeklyNote())
-        appVm.openFile(path, "templates.weekly")
+        appVm.openNote(Weekly.getCurrentWeeklyNote(), "templates.weekly")
     }
 
 fun createPreviousWeeklyNoteAction(appVm: AppViewModel): Action =
@@ -225,7 +218,7 @@ fun createPreviousWeeklyNoteAction(appVm: AppViewModel): Action =
             val (week, year) = it
             val previousNote = Weekly.getPreviousWeeklyNote(root, week, year)
             if (previousNote != null) {
-                appVm.openFile(previousNote, "templates.weekly")
+                appVm.openNote(previousNote, "templates.weekly")
             }
         }
     }
@@ -239,12 +232,11 @@ fun createNextWeeklyNoteAction(appVm: AppViewModel): Action =
             val (week, year) = it
             val nextNote = Weekly.getNextWeeklyNote(root, week, year)
             if (nextNote != null) {
-                appVm.openFile(nextNote, "templates.weekly")
+                appVm.openNote(nextNote, "templates.weekly")
             } else {
                 val nextWeekFirstDay = Weekly.getFirstDayOfWeek(week, year).plusWeeks(1)
                 val noteName = Weekly.formatWeeklyNoteName(Weekly.getWeek(nextWeekFirstDay), nextWeekFirstDay.year)
-                val path = root.pathToFile(noteName)
-                appVm.openFile(path, "templates.weekly")
+                appVm.openNote(noteName, "templates.weekly")
             }
         }
     }
@@ -291,7 +283,7 @@ fun createJumpToBacklinkAction(appVm: AppViewModel): Action =
                             acc.appendLine(entry.lines.trim())
                         }.toString().trim()
                         Action(title, description) {
-                            appVm.openFile(path)
+                            appVm.openNote(root.getNoteName(path))
                         }
                     }
             }

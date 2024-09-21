@@ -69,8 +69,9 @@ class AppViewModel(
         }
     }
 
-    fun openFile(path: Path, templateName: String = "templates.note") {
+    fun openNote(noteName: NoteName, templateName: String = "templates.note") {
         val root = state.value.root
+        val path = root.pathToFile(noteName)
         val title = path.nameWithoutExtension
         val defaultContent = Templates.newNote(root, title, NoteName(templateName))
         state.value.workspace.addTab(path, defaultContent)

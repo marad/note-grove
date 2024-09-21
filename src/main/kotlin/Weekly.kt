@@ -34,29 +34,31 @@ object Weekly {
         return formatWeeklyNoteName(currentWeek, LocalDate.now().year)
     }
 
-    fun getPreviousWeeklyNote(root: Root, week: Int, year: Int, maxWeeksBack: Int = 10): Path? {
+    fun getPreviousWeeklyNote(root: Root, week: Int, year: Int, maxWeeksBack: Int = 10): NoteName? {
         var currentDate = getFirstDayOfWeek(week, year)
         var maxWeeksBack = maxWeeksBack
         while (maxWeeksBack-- > 0) {
             currentDate = currentDate.minusWeeks(1)
             val week = getWeek(currentDate)
-            val path = root.pathToFile(formatWeeklyNoteName(week, currentDate.year))
+            val noteName = formatWeeklyNoteName(week, currentDate.year)
+            val path = root.pathToFile(noteName)
             if (path.exists()) {
-                return path
+                return noteName
             }
         }
         return null
     }
 
-    fun getNextWeeklyNote(root: Root, week: Int, year: Int, maxWeeksForward: Int = 10): Path? {
+    fun getNextWeeklyNote(root: Root, week: Int, year: Int, maxWeeksForward: Int = 10): NoteName? {
         var currentDate = getFirstDayOfWeek(week, year)
         var maxWeeksForward = maxWeeksForward
         while (maxWeeksForward-- > 0) {
             currentDate = currentDate.plusWeeks(1)
             val week = getWeek(currentDate)
-            val path = root.pathToFile(formatWeeklyNoteName(week, currentDate.year))
+            val noteName = formatWeeklyNoteName(week, currentDate.year)
+            val path = root.pathToFile(noteName)
             if (path.exists()) {
-                return path
+                return noteName
             }
         }
         return null

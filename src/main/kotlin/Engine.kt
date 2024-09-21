@@ -34,7 +34,7 @@ class Root(private val path: String) {
     fun getHierarchy(): Hierarchy = Hierarchy(path)
 
     fun pathToFile(file: NoteName): Path = Paths.get(path, "$file.md")
-    fun fileToPath(file: Path): NoteName = NoteName(file.nameWithoutExtension)
+    fun getNoteName(file: Path): NoteName = NoteName(file.nameWithoutExtension)
 
     fun searchFiles(pattern: String, strategy: (String,String)->Boolean = MatchingStrategy::fuzzy): List<NoteName> =
         files.search(pattern, path, strategy).map { NoteName(it) }
@@ -50,7 +50,7 @@ class Root(private val path: String) {
         val updatedNotes = mutableListOf<NoteName>()
         searchBacklinks(oldName).filterIsInstance<Begin>().forEach {
             sed.replace(oldName.name, newName.name, it.path)
-            updatedNotes.add(fileToPath(Paths.get(it.path)))
+            updatedNotes.add(getNoteName(Paths.get(it.path)))
         }
 
         val oldPath = pathToFile(oldName)

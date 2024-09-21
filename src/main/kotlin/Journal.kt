@@ -16,27 +16,29 @@ object Journal {
 
     fun todaysDailyNote(): NoteName = formatJournalNoteName(LocalDate.now())
 
-    fun previousDailyNote(root: Root, date: LocalDate, maxDaysBack: Int = 60): Path? {
+    fun previousDailyNote(root: Root, date: LocalDate, maxDaysBack: Int = 60): NoteName? {
         var maxDaysBack = maxDaysBack
         var currentDate = date
         while (maxDaysBack-- > 0) {
             currentDate = currentDate.minusDays(1)
-            val path = root.pathToFile(formatJournalNoteName(currentDate))
+            val noteName = formatJournalNoteName(currentDate)
+            val path = root.pathToFile(noteName)
             if (path.exists()) {
-                return path
+                return noteName
             }
         }
         return null
     }
 
-    fun nextDailyNote(root: Root, date: LocalDate, maxDaysForward: Int = 60): Path? {
+    fun nextDailyNote(root: Root, date: LocalDate, maxDaysForward: Int = 60): NoteName? {
         var maxDaysForward = maxDaysForward
         var currentDate = date
         while (maxDaysForward-- > 0) {
             currentDate = currentDate.plusDays(1)
-            val path = root.pathToFile(formatJournalNoteName(currentDate))
+            val noteName = formatJournalNoteName(currentDate)
+            val path = root.pathToFile(noteName)
             if (path.exists()) {
-                return path
+                return noteName
             }
         }
         return null
