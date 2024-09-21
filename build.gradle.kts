@@ -27,6 +27,7 @@ dependencies {
     implementation("org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
     implementation("cc.ekblad:4koma:1.2.0")
     implementation("org.antlr:stringtemplate:4.0.2")
+    implementation("org.apache.commons:commons-text:1.12.0")
 }
 
 compose.desktop {
