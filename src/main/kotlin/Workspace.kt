@@ -67,7 +67,8 @@ class WorkspaceViewModel : ViewModel() {
             closeTab(state.value.tabIndex)
         }
     }
-    fun activeTab(): TabViewModel? = tabs.getOrNull(state.value.tabIndex)
+    fun activeTab(): TabViewModel? = if (state.value.tabIndex >= 0 && state.value.tabIndex < tabs.size)
+        tabs.getOrNull(state.value.tabIndex) else null
     fun findTab(file: Path): TabViewModel? = tabs.firstOrNull { it.state.value.file == file }
     fun tabIndex(file: Path): Int? = tabs.indexOfFirst { it.state.value.file == file }.let {
         if (it == -1) null else it

@@ -102,13 +102,18 @@ class LauncherViewModel : ViewModel() {
 
     fun show(initialQuery: String? = null,
              placeholder: String = "Type to select...",
+             selectText: Boolean = false,
              forceAccept: (String) -> Unit = {},
              searchActions: (String) -> List<Action>,
              ) {
         val finalQuery = initialQuery ?: _state.value.text.text
         _state.value = LauncherState(
             visible = true,
-            text = _state.value.text.copy(text = finalQuery, selection = TextRange(finalQuery.length)),
+            text = _state.value.text.copy(
+                text = finalQuery,
+                selection = if (selectText)
+                    TextRange(0, finalQuery.length)
+                else TextRange(finalQuery.length)),
             selectedItem = 0,
             actions = searchActions(finalQuery)
                 .sortedByDescending {
