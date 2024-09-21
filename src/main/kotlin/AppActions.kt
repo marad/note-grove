@@ -10,12 +10,12 @@ private fun searchActions(appVm: AppViewModel, appActions: List<Action>, name: S
     return if (name.startsWith(">")) {
         val searchTerm = name.drop(1).trim()
         appActions.filter {
-            it.name.contains(searchTerm, ignoreCase = true) ||
-                    (it.description?.contains(searchTerm, ignoreCase = true) ?: false)
+            MatchingStrategy.fuzzy(it.name, searchTerm) ||
+                    (it.description?.let { MatchingStrategy.fuzzy(it, searchTerm) } == true)
         }
     } else {
         val root = appVm.state.value.root
-        root.searchFiles(name).map {
+        root.searchFiles(name, MatchingStrategy::fuzzy).map {
             Action(it.name) {
                 appVm.openNote(it)
             }

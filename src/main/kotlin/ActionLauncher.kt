@@ -1,4 +1,3 @@
-import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
@@ -10,17 +9,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.WindowState
-import androidx.compose.ui.window.singleWindowApplication
 import androidx.lifecycle.ViewModel
-import config.AppConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import java.nio.file.Paths
+import org.apache.commons.text.similarity.FuzzyScore
+import java.util.Locale
 
 data class Action(
     val name: String,
@@ -53,6 +49,7 @@ data class LauncherState(
 class LauncherViewModel : ViewModel() {
     private val _state = MutableStateFlow(LauncherState())
     val state = _state.asStateFlow()
+    val score = FuzzyScore(Locale.getDefault())
 
     fun selectNext() {
         _state.value = _state.value.selectNext()
@@ -66,6 +63,9 @@ class LauncherViewModel : ViewModel() {
         _state.value = _state.value.copy(
             text = textFieldValue,
             actions = state.value.searchActions(textFieldValue.text)
+                .sortedByDescending {
+                    score.fuzzyScore(it.name, textFieldValue.text)
+                }
         )
     }
 
@@ -101,7 +101,11 @@ class LauncherViewModel : ViewModel() {
             visible = true,
             text = _state.value.text.copy(text = finalQuery, selection = TextRange(finalQuery.length)),
             selectedItem = 0,
-            actions = searchActions(finalQuery),
+            actions = searchActions(finalQuery)
+                .sortedByDescending {
+                    score.fuzzyScore(it.name, finalQuery)
+                }
+            ,
             searchActions = searchActions,
             placeholder = placeholder)
     }
