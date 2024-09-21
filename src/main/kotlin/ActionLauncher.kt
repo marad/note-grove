@@ -34,11 +34,9 @@ data class LauncherState(
     val searchActions: (String) -> List<Action> = { emptyList() },
     val placeholder: String = "Type to select..."
 ) {
-    fun selectNext() = copy(selectedItem = (selectedItem+1)
-        .coerceIn(0, (actions.size-1).coerceAtLeast(0)))
+    fun selectNext() = copy(selectedItem = (selectedItem+1) % actions.size)
 
-    fun selectPrevious() = copy(selectedItem = (selectedItem-1)
-        .coerceIn(0, (actions.size-1).coerceAtLeast(0)))
+    fun selectPrevious() = copy(selectedItem = if (selectedItem == 0) actions.size - 1 else selectedItem-1)
 
     fun isSelected(index: Int) = selectedItem == index
 
