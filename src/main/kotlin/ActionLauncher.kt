@@ -32,7 +32,8 @@ data class LauncherState(
     val actions: List<Action> = listOf(),
     val selectedItem: Int = 0,
     val searchActions: (String) -> List<Action> = { emptyList() },
-    val placeholder: String = "Type to select..."
+    val placeholder: String = "Type to select...",
+    val forceAccept: (String) -> Unit = {},
 ) {
     fun selectNext() = copy(selectedItem = (selectedItem+1) % actions.size)
 
@@ -59,12 +60,20 @@ class LauncherViewModel : ViewModel() {
 
     fun textFieldChanged(textFieldValue: TextFieldValue) {
         _state.value = _state.value.copy(
+            selectedItem = 0,
             text = textFieldValue,
             actions = state.value.searchActions(textFieldValue.text)
                 .sortedByDescending {
                     score.fuzzyScore(it.name, textFieldValue.text)
                 }
         )
+    }
+
+    fun fillSelectedItem() {
+        if (state.value.selectedItem in 0 until state.value.actions.size) {
+            val action = state.value.actions[state.value.selectedItem]
+            textFieldChanged(_state.value.text.copy(text = action.name, selection = TextRange(action.name.length)))
+        }
     }
 
     fun showInput(initialQuery: String? = "", onAccept: (String) -> Unit) {
@@ -82,8 +91,8 @@ class LauncherViewModel : ViewModel() {
         show(listOf(confirmAction, cancelAction), initialQuery = "")
     }
 
-    fun show(actions: List<Action>, initialQuery: String? = null) {
-        show(initialQuery) { query ->
+    fun show(actions: List<Action>, forceAccept: (String) -> Unit = {}, initialQuery: String? = null) {
+        show(initialQuery, forceAccept = forceAccept) { query ->
             actions.filter {
                 it.name.contains(query, ignoreCase = true) ||
                         (it.description?.contains(query, ignoreCase = true) ?: false)
@@ -93,7 +102,9 @@ class LauncherViewModel : ViewModel() {
 
     fun show(initialQuery: String? = null,
              placeholder: String = "Type to select...",
-             searchActions: (String) -> List<Action>) {
+             forceAccept: (String) -> Unit = {},
+             searchActions: (String) -> List<Action>,
+             ) {
         val finalQuery = initialQuery ?: _state.value.text.text
         _state.value = LauncherState(
             visible = true,
@@ -105,7 +116,8 @@ class LauncherViewModel : ViewModel() {
                 }
             ,
             searchActions = searchActions,
-            placeholder = placeholder)
+            placeholder = placeholder,
+            forceAccept = forceAccept)
     }
 
     fun hide() {
@@ -152,6 +164,12 @@ fun ActionLauncher(vm: LauncherViewModel,
         Column(
             modifier = Modifier.padding(10.dp)
                 .onPreviewKeyEvent { ev ->
+                    if (ev.key == Key.Tab) {
+                        if (ev.type == KeyEventType.KeyDown) {
+                            vm.fillSelectedItem()
+                        }
+                        return@onPreviewKeyEvent true
+                    }
                     if (ev.key == Key.DirectionUp || (ev.key == Key.K && ev.isCtrlPressed)) {
                         if (ev.type == KeyEventType.KeyDown) {
                             vm.selectPrevious()
@@ -161,6 +179,13 @@ fun ActionLauncher(vm: LauncherViewModel,
                     if (ev.key == Key.DirectionDown || (ev.key == Key.J && ev.isCtrlPressed)) {
                         if (ev.type == KeyEventType.KeyDown) {
                             vm.selectNext()
+                        }
+                        return@onPreviewKeyEvent true
+                    }
+                    if (ev.key == Key.Enter && ev.isCtrlPressed) {
+                        if (ev.type == KeyEventType.KeyDown) {
+                            state.forceAccept(state.text.text)
+                            vm.hide()
                         }
                         return@onPreviewKeyEvent true
                     }

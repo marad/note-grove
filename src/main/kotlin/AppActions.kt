@@ -25,7 +25,9 @@ private fun searchActions(appVm: AppViewModel, appActions: List<Action>, name: S
 
 fun createSearchNoteAction(appVm: AppViewModel, appActions: List<Action>): Action =
     Action("Search note", "Shows search note dialog") {
-        appVm.actionLauncherViewModel.show("") {
+        appVm.actionLauncherViewModel.show("", forceAccept = { name ->
+            appVm.openNote(NoteName(name))
+        }) {
             searchActions(appVm, appActions, it)
         }
     }
