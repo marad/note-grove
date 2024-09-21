@@ -169,7 +169,6 @@ fun createFollowLinkAction(appVm: AppViewModel): Action {
         val cursor = editorViewModel?.state?.value?.content?.selection?.start ?: 0
 
         val link = Markdown.findLink(content, cursor)
-        println(link)
         if (link != null) {
             if (link.startsWith("http")) {
                 if (Desktop.isDesktopSupported()) {
@@ -301,5 +300,19 @@ fun createJumpToBacklinkAction(appVm: AppViewModel): Action =
                     }
             }
         }
+    }
 
+
+fun createSearchPhraseAction(appVm: AppViewModel): Action =
+    Action("Search phrase", "Searches for a phrase in all notes") {
+        val root = appVm.state.value.root
+        appVm.actionLauncherViewModel.show(placeholder = "Enter a phrase...") { phrase ->
+            val entries = root.searchInFiles(phrase).filterIsInstance<Match>()
+            entries.map { entry ->
+                val path = Path.of(entry.path)
+                Action(path.nameWithoutExtension, entry.lines.trim()) {
+                    appVm.openNote(NoteName(path.nameWithoutExtension))
+                }
+            }
+        }
     }

@@ -232,12 +232,13 @@ fun main() = application {
     val nextWeeklyNote = createNextWeeklyNoteAction(appVm)
     val insertTemplate = createInsertTemplateAction(appVm)
     val jumpToBacklink = createJumpToBacklinkAction(appVm)
+    val searchPhrase = createSearchPhraseAction(appVm)
 
     appActions.addAll(listOf(
         saveAction, closeTabAction, newNoteAction, deleteNoteAction, renameNoteAction, selectRootAction,
         cycleRootAction, createRefactorHierarchyAction(appVm), followLinkAction, showNoteSearchDialog,
         showActionSearchDialog, openDailyNote, previousDailyNote, nextDailyNote,
-        openWeeklyNote, previousWeeklyNote, nextWeeklyNote, insertTemplate, jumpToBacklink
+        openWeeklyNote, previousWeeklyNote, nextWeeklyNote, insertTemplate, jumpToBacklink, searchPhrase
     ))
 
     appActions.sortBy { it.name }
@@ -253,6 +254,7 @@ fun main() = application {
     shortcuts.add(Shortcut(Key.D, KeyModifier.Ctrl), openDailyNote)
     shortcuts.add(Shortcut(Key.U, KeyModifier.Ctrl), previousDailyNote)
     shortcuts.add(Shortcut(Key.I, KeyModifier.Ctrl), nextDailyNote)
+    shortcuts.add(Shortcut(Key.F, KeyModifier.Ctrl, KeyModifier.Shift), searchPhrase)
 
 
     Window(
