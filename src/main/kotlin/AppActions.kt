@@ -271,3 +271,30 @@ fun createInsertTemplateAction(appVm: AppViewModel): Action =
                 }
         }
     }
+
+fun createJumpToBacklinkAction(appVm: AppViewModel): Action =
+    Action("Jump to backlink", "Shows a list of backlinks to current note") {
+        val matchingStrategy = MatchingStrategy::fuzzy
+        val activeTab = appVm.state.value.workspace.activeTab()
+        val noteName = activeTab?.title
+        if (noteName != null) {
+            val root = appVm.state.value.root
+            val backlinks = root.searchBacklinks(NoteName(noteName)).filterIsInstance<Match>()
+            appVm.actionLauncherViewModel.show("") { pattern ->
+                backlinks
+                    .filter { matchingStrategy(it.path, pattern) }
+                    .groupBy { it.path }
+                    .map { (_, backlinks) ->
+                        val path = Path.of(backlinks.first().path)
+                        val title = path.nameWithoutExtension
+                        val description = backlinks.fold(StringBuilder()) { acc, entry ->
+                            acc.appendLine(entry.lines.trim())
+                        }.toString().trim()
+                        Action(title, description) {
+                            appVm.openFile(path)
+                        }
+                    }
+            }
+        }
+
+    }

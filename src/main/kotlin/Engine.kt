@@ -43,6 +43,9 @@ class Root(private val path: String) {
     fun searchInFiles(pattern: String): List<Entry> =
         rg.search(pattern, path)
 
+    fun searchBacklinks(noteName: NoteName): List<Entry> =
+        searchInFiles("\\[\\[${noteName.name}[^\\]]*\\]\\]")
+
     fun renameNote(oldName: NoteName, newName: NoteName): List<NoteName> {
         val updatedNotes = mutableListOf<NoteName>()
         searchBacklinks(oldName).filterIsInstance<Begin>().forEach {
