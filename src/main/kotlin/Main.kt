@@ -13,32 +13,24 @@ import androidx.compose.material.icons.sharp.Search
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import androidx.lifecycle.ViewModel
 import config.AppConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import window.NoteWindow
+import window.NoteWindowViewModel
 import java.nio.file.Path
-import kotlin.io.path.nameWithoutExtension
 import kotlin.system.exitProcess
 
 
 data class AppState(
-    val roots: List<RootState>,
-    val activeRootIndex: Int = 0,
-)  {
-    val currentRootName get() =  roots[activeRootIndex].name
-    val workspace get() =  roots[activeRootIndex].workspace
-    val root get() =  roots[activeRootIndex].root
-
+    val windows: List<NoteWindowViewModel>,
+) {
     init {
-        assert(roots.isNotEmpty()) { "At least one root must be provided" }
+        assert(windows.isNotEmpty()) { "At least one window must be provided" }
     }
 }
 
@@ -49,60 +41,32 @@ data class RootState(
 )
 
 class AppViewModel(
-    appConfig: AppConfig,
+    val appConfig: AppConfig,
     val actionLauncherViewModel: LauncherViewModel = LauncherViewModel(),
 ) : ViewModel() {
     private val _state = MutableStateFlow(AppState(
-        roots = appConfig.roots.map { RootState(it.name, Root(it.path)) }
+        windows = listOf(NoteWindowViewModel(appConfig.roots))
     ))
     val state = _state.asStateFlow()
-    val windowState = WindowState(size = DpSize(1000.dp, 800.dp))
 
-    fun cycleRoots() {
-        _state.value = _state.value.copy(activeRootIndex = (_state.value.activeRootIndex + 1) % _state.value.roots.size)
+    fun newWindow() {
+        _state.value = _state.value.copy(
+            windows = _state.value.windows + NoteWindowViewModel(appConfig.roots)
+        )
     }
 
-    fun selectRoot(root: Root) {
-        val index = _state.value.roots.indexOfFirst { it.root == root }
-        if (index != -1) {
-            _state.value = _state.value.copy(activeRootIndex = index)
-        }
+    fun closeWindow(windowViewModel: NoteWindowViewModel) {
+        val windows = _state.value.windows.toMutableList()
+        windows.remove(windowViewModel)
+        _state.value = _state.value.copy(windows = windows)
     }
 
-    fun openNote(noteName: NoteName, templateName: String = "templates.note") {
-        val root = state.value.root
-        val path = root.pathToFile(noteName)
-        val title = path.nameWithoutExtension
-        val defaultContent = Templates.newNote(root, title, NoteName(templateName))
-        state.value.workspace.addTab(path, defaultContent)
-    }
-
-    fun renameNote(oldName: NoteName, newName: NoteName) {
-        val root = state.value.root
-        val updatedNotes = root.renameNote(oldName, newName)
-        state.value.workspace.updateTabFile(root.pathToFile(oldName), root.pathToFile(newName))
-        updatedNotes.forEach {
-            state.value.workspace.reloadTabIfOpened(root.pathToFile(it))
-        }
-    }
-
-    fun refactorHierarchy(srcPattern: String, dstPattern: String, files: List<NoteName>) {
-        val root = state.value.root
-        val updatedNotes = mutableSetOf<NoteName>()
-        files.forEach {
-            val newName = NoteName(it.name.replace(srcPattern, dstPattern))
-            state.value.workspace.updateTabFile(root.pathToFile(it), root.pathToFile(newName))
-            updatedNotes.addAll(root.renameNote(it, newName))
-        }
-        updatedNotes.forEach {
-            state.value.workspace.reloadTabIfOpened(root.pathToFile(it))
-        }
-    }
+    fun hasWindows() = state.value.windows.isNotEmpty()
 }
 
 @Composable
 @Preview
-fun App(appVm: AppViewModel, onRequestCompletions: (tabViewModel: TabViewModel, query: String) -> List<String> = { _, _ -> emptyList() }) {
+fun App(appVm: NoteWindowViewModel, onRequestCompletions: (tabViewModel: TabViewModel, query: String) -> List<String> = { _, _ -> emptyList() }) {
 
     val state by appVm.state.collectAsState()
 
@@ -197,82 +161,32 @@ fun FileList() {
 }
 
 fun main() = application {
-    val currentDir = Path.of("")
-    val config = AppConfig.load(currentDir.resolve("config.toml"))
-    if (config == null) {
-        println("Config not found at ${currentDir.resolve("config.toml")}")
-        exitProcess(1)
-    }
-
     val appVm = remember {
+        val currentDir = Path.of("")
+        val config = AppConfig.load(currentDir.resolve("config.toml"))
+        if (config == null) {
+            println("Config not found at ${currentDir.resolve("config.toml")}")
+            exitProcess(1)
+        }
         AppViewModel(
             appConfig = config,
         )
     }
-    val shortcuts = Shortcuts()
-    val appActions = mutableListOf<Action>()
 
     val appState by appVm.state.collectAsState()
 
-    val saveAction = createSaveAction(appVm)
-    val closeTabAction = createCloseTabAction(appVm)
-    val newNoteAction = newNoteAction(appVm)
-    val deleteNoteAction = createDeleteAction(appVm)
-    val renameNoteAction = createRenameNoteAction(appVm)
-    val selectRootAction = createSelectRootAction(appVm)
-    val cycleRootAction = createCycleRootAction(appVm)
-    val followLinkAction = createFollowLinkAction(appVm)
-    val showNoteSearchDialog = createSearchNoteAction(appVm, appActions)
-    val showActionSearchDialog = createSearchActionsAction(appVm, appActions)
-    val openDailyNote = createOpenDailyNoteAction(appVm)
-    val previousDailyNote = createPreviousDailyNoteAction(appVm)
-    val nextDailyNote = createNextDailyNoteAction(appVm)
-    val openWeeklyNote = createOpenWeeklyNoteAction(appVm)
-    val previousWeeklyNote = createPreviousWeeklyNoteAction(appVm)
-    val nextWeeklyNote = createNextWeeklyNoteAction(appVm)
-    val insertTemplate = createInsertTemplateAction(appVm)
-    val jumpToBacklink = createJumpToBacklinkAction(appVm)
-    val searchPhrase = createSearchPhraseAction(appVm)
-
-    appActions.addAll(listOf(
-        saveAction, closeTabAction, newNoteAction, deleteNoteAction, renameNoteAction, selectRootAction,
-        cycleRootAction, createRefactorHierarchyAction(appVm), followLinkAction, showNoteSearchDialog,
-        showActionSearchDialog, openDailyNote, previousDailyNote, nextDailyNote,
-        openWeeklyNote, previousWeeklyNote, nextWeeklyNote, insertTemplate, jumpToBacklink, searchPhrase
-    ))
-
-    appActions.sortBy { it.name }
-
-    shortcuts.add(Shortcut(Key.S, KeyModifier.Ctrl), saveAction)
-    shortcuts.add(Shortcut(Key.W, KeyModifier.Ctrl), closeTabAction)
-    shortcuts.add(Shortcut(Key.N, KeyModifier.Ctrl), newNoteAction)
-    shortcuts.add(Shortcut(Key.R, KeyModifier.Ctrl, KeyModifier.Shift), selectRootAction)
-    shortcuts.add(Shortcut(Key.R, KeyModifier.Ctrl), cycleRootAction)
-    shortcuts.add(Shortcut(Key.G, KeyModifier.Ctrl), followLinkAction)
-    shortcuts.add(Shortcut(Key.P, KeyModifier.Ctrl), showNoteSearchDialog)
-    shortcuts.add(Shortcut(Key.P, KeyModifier.Ctrl, KeyModifier.Shift), showActionSearchDialog)
-    shortcuts.add(Shortcut(Key.D, KeyModifier.Ctrl), openDailyNote)
-    shortcuts.add(Shortcut(Key.U, KeyModifier.Ctrl), previousDailyNote)
-    shortcuts.add(Shortcut(Key.I, KeyModifier.Ctrl), nextDailyNote)
-    shortcuts.add(Shortcut(Key.F, KeyModifier.Ctrl, KeyModifier.Shift), searchPhrase)
-
-
-    Window(
-        title = "Note Grove - ${appState.currentRootName}",
-        state = appVm.windowState,
-        onPreviewKeyEvent = shortcuts::handle,
-        onCloseRequest = ::exitApplication) {
-
-        val primaryColor = Color(0.21f, 0.4f, 0.32f)
-        MaterialTheme(colors = lightColors(primary = primaryColor)) {
-            Surface {
-                App(appVm, onRequestCompletions = { tab, query ->
-                    val root = appVm.state.value.root
-                    root.searchFiles(query).map { it.name }
-                })
+    appState.windows.forEach { windowVm ->
+        NoteWindow(windowVm,
+            onCloseRequest = {
+                appVm.closeWindow(windowVm)
+                if (!appVm.hasWindows()) {
+                    exitApplication()
+                }
+            },
+            newWindowRequested = {
+                appVm.newWindow()
             }
-
-            ActionLauncherDialog(appVm.actionLauncherViewModel)
-        }
+        )
     }
 }
+

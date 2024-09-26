@@ -1,13 +1,65 @@
+import androidx.compose.ui.input.key.Key
 import com.vladsch.flexmark.util.ast.NodeVisitor
 import files.internal.MatchingStrategy
 import tools.rg.Match
+import window.NoteWindowViewModel
 import java.awt.Desktop
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.LocalDate
 import kotlin.io.path.nameWithoutExtension
 
-private fun searchActions(appVm: AppViewModel, appActions: List<Action>, name: String): List<Action> {
+fun prepareActionsAndShortcuts(windowVm: NoteWindowViewModel): Shortcuts {
+    val shortcuts = Shortcuts()
+    val appActions = mutableListOf<Action>()
+
+
+    val saveAction = createSaveAction(windowVm)
+    val closeTabAction = createCloseTabAction(windowVm)
+    val newNoteAction = newNoteAction(windowVm)
+    val deleteNoteAction = createDeleteAction(windowVm)
+    val renameNoteAction = createRenameNoteAction(windowVm)
+    val selectRootAction = createSelectRootAction(windowVm)
+    val cycleRootAction = createCycleRootAction(windowVm)
+    val followLinkAction = createFollowLinkAction(windowVm)
+    val showNoteSearchDialog = createSearchNoteAction(windowVm, appActions)
+    val showActionSearchDialog = createSearchActionsAction(windowVm, appActions)
+    val openDailyNote = createOpenDailyNoteAction(windowVm)
+    val previousDailyNote = createPreviousDailyNoteAction(windowVm)
+    val nextDailyNote = createNextDailyNoteAction(windowVm)
+    val openWeeklyNote = createOpenWeeklyNoteAction(windowVm)
+    val previousWeeklyNote = createPreviousWeeklyNoteAction(windowVm)
+    val nextWeeklyNote = createNextWeeklyNoteAction(windowVm)
+    val insertTemplate = createInsertTemplateAction(windowVm)
+    val jumpToBacklink = createJumpToBacklinkAction(windowVm)
+    val searchPhrase = createSearchPhraseAction(windowVm)
+
+    appActions.addAll(listOf(
+        saveAction, closeTabAction, newNoteAction, deleteNoteAction, renameNoteAction, selectRootAction,
+        cycleRootAction, createRefactorHierarchyAction(windowVm), followLinkAction, showNoteSearchDialog,
+        showActionSearchDialog, openDailyNote, previousDailyNote, nextDailyNote,
+        openWeeklyNote, previousWeeklyNote, nextWeeklyNote, insertTemplate, jumpToBacklink, searchPhrase
+    ))
+
+    appActions.sortBy { it.name }
+
+    shortcuts.add(Shortcut(Key.S, KeyModifier.Ctrl), saveAction)
+    shortcuts.add(Shortcut(Key.W, KeyModifier.Ctrl), closeTabAction)
+    shortcuts.add(Shortcut(Key.N, KeyModifier.Ctrl), newNoteAction)
+    shortcuts.add(Shortcut(Key.R, KeyModifier.Ctrl, KeyModifier.Shift), selectRootAction)
+    shortcuts.add(Shortcut(Key.R, KeyModifier.Ctrl), cycleRootAction)
+    shortcuts.add(Shortcut(Key.G, KeyModifier.Ctrl), followLinkAction)
+    shortcuts.add(Shortcut(Key.P, KeyModifier.Ctrl), showNoteSearchDialog)
+    shortcuts.add(Shortcut(Key.P, KeyModifier.Ctrl, KeyModifier.Shift), showActionSearchDialog)
+    shortcuts.add(Shortcut(Key.D, KeyModifier.Ctrl), openDailyNote)
+    shortcuts.add(Shortcut(Key.U, KeyModifier.Ctrl), previousDailyNote)
+    shortcuts.add(Shortcut(Key.I, KeyModifier.Ctrl), nextDailyNote)
+    shortcuts.add(Shortcut(Key.F, KeyModifier.Ctrl, KeyModifier.Shift), searchPhrase)
+
+    return shortcuts
+}
+
+private fun searchActions(appVm: NoteWindowViewModel, appActions: List<Action>, name: String): List<Action> {
     return if (name.startsWith(">")) {
         val searchTerm = name.drop(1).trim()
         appActions.filter {
@@ -24,7 +76,7 @@ private fun searchActions(appVm: AppViewModel, appActions: List<Action>, name: S
     }
 }
 
-fun createSearchNoteAction(appVm: AppViewModel, appActions: List<Action>): Action =
+fun createSearchNoteAction(appVm: NoteWindowViewModel, appActions: List<Action>): Action =
     Action("Search note", "Shows search note dialog") {
         val currentNoteTitle = appVm.state.value.workspace.activeTab()?.title
         appVm.actionLauncherViewModel.show(currentNoteTitle, selectText = currentNoteTitle != null, forceAccept = { name ->
@@ -34,19 +86,19 @@ fun createSearchNoteAction(appVm: AppViewModel, appActions: List<Action>): Actio
         }
     }
 
-fun createSearchActionsAction(appVm: AppViewModel, appActions: List<Action>): Action =
+fun createSearchActionsAction(appVm: NoteWindowViewModel, appActions: List<Action>): Action =
     Action("Search actions", "Shows search actions dialog") {
         appVm.actionLauncherViewModel.show("> ") {
             searchActions(appVm, appActions, it)
         }
     }
 
-fun createCloseTabAction(appVm: AppViewModel): Action =
+fun createCloseTabAction(appVm: NoteWindowViewModel): Action =
     Action("Close tab", "Closes current editor tab") {
         appVm.state.value.workspace.closeActiveTab()
     }
 
-fun createSaveAction(appVm: AppViewModel): Action =
+fun createSaveAction(appVm: NoteWindowViewModel): Action =
     Action("Save", "Saves current file") {
         appVm.state.value.workspace.activeTab()?.let { tab ->
             val content = tab.editorViewModel.content.text
@@ -67,7 +119,7 @@ fun createSaveAction(appVm: AppViewModel): Action =
     }
 
 
-fun newNoteAction(appVm: AppViewModel): Action =
+fun newNoteAction(appVm: NoteWindowViewModel): Action =
     Action("New note", "Creates a new note") {
         val activeTab = appVm.state.value.workspace.activeTab()
         val title = activeTab?.title
@@ -83,7 +135,7 @@ fun newNoteAction(appVm: AppViewModel): Action =
     }
 
 
-fun createDeleteAction(appVm: AppViewModel): Action =
+fun createDeleteAction(appVm: NoteWindowViewModel): Action =
     Action("Delete", "Deletes current file") {
         // get current note name
         val activeTab = appVm.state.value.workspace.activeTab()
@@ -105,7 +157,7 @@ fun createDeleteAction(appVm: AppViewModel): Action =
 
     }
 
-fun createRenameNoteAction(appVm: AppViewModel): Action =
+fun createRenameNoteAction(appVm: NoteWindowViewModel): Action =
     Action("Rename", "Renames current file") {
         val activeTab = appVm.state.value.workspace.activeTab()
         if (activeTab != null) {
@@ -118,7 +170,7 @@ fun createRenameNoteAction(appVm: AppViewModel): Action =
         }
     }
 
-fun createSelectRootAction(appVm: AppViewModel): Action =
+fun createSelectRootAction(appVm: NoteWindowViewModel): Action =
     Action("Select root", "Shows dialog to switch active root") {
         val state = appVm.state.value
         appVm.actionLauncherViewModel.show("") { query ->
@@ -132,12 +184,12 @@ fun createSelectRootAction(appVm: AppViewModel): Action =
         }
     }
 
-fun createCycleRootAction(appVm: AppViewModel): Action =
+fun createCycleRootAction(appVm: NoteWindowViewModel): Action =
     Action("Cycle roots", "Cycles through all opened roots") {
         appVm.cycleRoots()
     }
 
-fun createRefactorHierarchyAction(appVm: AppViewModel): Action =
+fun createRefactorHierarchyAction(appVm: NoteWindowViewModel): Action =
     Action("Refactor hierarchy", "Changes name for multiple files at once") {
         val tabState = appVm.state.value.workspace.activeTab()
         val name = tabState?.title ?: ""
@@ -161,7 +213,7 @@ fun createRefactorHierarchyAction(appVm: AppViewModel): Action =
     }
 
 
-fun createFollowLinkAction(appVm: AppViewModel): Action {
+fun createFollowLinkAction(appVm: NoteWindowViewModel): Action {
     return Action("Follow link", "Follows link under cursor") {
         val activeTab = appVm.state.value.workspace.activeTab()
         val editorViewModel = activeTab?.editorViewModel
@@ -182,12 +234,12 @@ fun createFollowLinkAction(appVm: AppViewModel): Action {
     }
 }
 
-fun createOpenDailyNoteAction(appVm: AppViewModel): Action =
+fun createOpenDailyNoteAction(appVm: NoteWindowViewModel): Action =
     Action("Open daily journal note") {
         appVm.openNote(Journal.todaysDailyNote(), "templates.daily")
     }
 
-fun createPreviousDailyNoteAction(appVm: AppViewModel): Action =
+fun createPreviousDailyNoteAction(appVm: NoteWindowViewModel): Action =
     Action("Open previous daily journal note") {
         val root = appVm.state.value.root
         val activeTab = appVm.state.value.workspace.activeTab()
@@ -199,7 +251,7 @@ fun createPreviousDailyNoteAction(appVm: AppViewModel): Action =
         }
     }
 
-fun createNextDailyNoteAction(appVm: AppViewModel): Action =
+fun createNextDailyNoteAction(appVm: NoteWindowViewModel): Action =
     Action("Open next daily journal note") {
         val root = appVm.state.value.root
         val activeTab = appVm.state.value.workspace.activeTab()
@@ -216,12 +268,12 @@ fun createNextDailyNoteAction(appVm: AppViewModel): Action =
     }
 
 
-fun createOpenWeeklyNoteAction(appVm: AppViewModel): Action =
+fun createOpenWeeklyNoteAction(appVm: NoteWindowViewModel): Action =
     Action("Open weekly note") {
         appVm.openNote(Weekly.getCurrentWeeklyNote(), "templates.weekly")
     }
 
-fun createPreviousWeeklyNoteAction(appVm: AppViewModel): Action =
+fun createPreviousWeeklyNoteAction(appVm: NoteWindowViewModel): Action =
     Action("Open previous weekly note") {
         val root = appVm.state.value.root
         val activeTab = appVm.state.value.workspace.activeTab()
@@ -235,7 +287,7 @@ fun createPreviousWeeklyNoteAction(appVm: AppViewModel): Action =
         }
     }
 
-fun createNextWeeklyNoteAction(appVm: AppViewModel): Action =
+fun createNextWeeklyNoteAction(appVm: NoteWindowViewModel): Action =
     Action("Open next weekly note") {
         val root = appVm.state.value.root
         val activeTab = appVm.state.value.workspace.activeTab()
@@ -254,7 +306,7 @@ fun createNextWeeklyNoteAction(appVm: AppViewModel): Action =
     }
 
 
-fun createInsertTemplateAction(appVm: AppViewModel): Action =
+fun createInsertTemplateAction(appVm: NoteWindowViewModel): Action =
     Action("Insert template", "Inserts template at cursor position") {
 
         // select template
@@ -276,7 +328,7 @@ fun createInsertTemplateAction(appVm: AppViewModel): Action =
         }
     }
 
-fun createJumpToBacklinkAction(appVm: AppViewModel): Action =
+fun createJumpToBacklinkAction(appVm: NoteWindowViewModel): Action =
     Action("Jump to backlink", "Shows a list of backlinks to current note") {
         val matchingStrategy = MatchingStrategy::fuzzy
         val activeTab = appVm.state.value.workspace.activeTab()
@@ -303,7 +355,7 @@ fun createJumpToBacklinkAction(appVm: AppViewModel): Action =
     }
 
 
-fun createSearchPhraseAction(appVm: AppViewModel): Action =
+fun createSearchPhraseAction(appVm: NoteWindowViewModel): Action =
     Action("Search phrase", "Searches for a phrase in all notes") {
         val root = appVm.state.value.root
         appVm.actionLauncherViewModel.show(placeholder = "Enter a phrase...") { phrase ->
