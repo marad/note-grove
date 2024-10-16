@@ -1,39 +1,80 @@
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Button
-import androidx.compose.material.Text
-import androidx.compose.material.TextField
-import androidx.compose.runtime.Composable
+import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.singleWindowApplication
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import notestream.NoteCardState
+import notestream.NoteStream
+import notestream.NoteStreamState
 
 
-class TestState {
-    var text = mutableStateOf("")
-}
+class Buffer(val title: String, initalContent: AnnotatedString) {
+    private val _content = MutableStateFlow(initalContent)
+    val content = _content.asStateFlow()
 
-@Composable
-fun Test(state: TestState, onChange: (String)->Unit) {
-    TextField(state.text.value, onValueChange = onChange)
-}
-
-@Composable
-fun TestScreen() {
-    var state = remember { TestState() }
-    Column {
-        Test(state, onChange = { state.text.value = it })
-        Button(onClick = {
-            state.text.value += "World!"
-        }) {
-            Text("Greet")
-        }
+    fun updateContent(annotatedString: AnnotatedString) {
+        _content.value = annotatedString
     }
-
 }
-
 
 fun main() {
     singleWindowApplication {
-        TestScreen()
+        val text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus ultricies aliquam egestas. Etiam tempus in enim quis vulputate. Cras orci arcu, porttitor vitae tellus sed, ullamcorper auctor lorem. Morbi erat justo, fringilla in purus at, hendrerit molestie enim. Cras eget magna leo. Nulla posuere ut sapien in tristique. Curabitur sodales maximus tempor. Nunc sit amet tempor mi, vitae imperdiet ligula. Proin tristique, enim vel vestibulum feugiat, quam odio ullamcorper nibh, eget efficitur augue felis eu tortor. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. In nisl metus, venenatis a massa sed, ullamcorper ultrices elit."
+        val cardA = NoteCardState(Buffer("title a", AnnotatedString(text)))
+        val cardB = NoteCardState(Buffer("title b", AnnotatedString("Donec efficitur elementum sem ut tempor. Ut sit amet arcu sit amet dui fringilla tincidunt vel quis erat. In eget diam efficitur turpis pulvinar sollicitudin eget nec diam. Fusce non tincidunt diam. Pellentesque a mauris eu eros pretium consectetur eu sit amet velit. Suspendisse augue metus, euismod eu tincidunt sed, auctor sit amet nibh. Etiam sed metus sollicitudin, placerat dolor a, porta leo. Cras in volutpat erat.")))
+
+        val sharedBuffer = Buffer("title c", AnnotatedString("shared content"))
+        val cardC = NoteCardState(sharedBuffer)
+        val cardD = NoteCardState(sharedBuffer)
+
+        val state = remember { mutableStateOf(NoteStreamState(
+            cards = listOf(cardA, cardB, cardC, cardD)
+        ))}
+
+        val lazyListState = rememberLazyListState()
+        val scope = rememberCoroutineScope()
+
+        MaterialTheme {
+            Column(Modifier.fillMaxSize().padding(16.dp)) {
+                NoteStream(
+                    state.value,
+                    lazyListState = lazyListState,
+                    onUpdate = { new -> state.value = new },
+                    modifier = Modifier.weight(0.5f)
+                        .onFocusChanged {
+                            println(it)
+                        }
+                )
+                Button(
+                    onClick = {
+                        val card = NoteCardState(Buffer("generated", AnnotatedString(text)))
+                        state.value = state.value.prependCard(card)
+                        scope.launch {
+                            lazyListState.animateScrollToItem(0)
+                        }
+                    }
+                ) {
+                    Icon(
+                        Icons.Default.Add,
+                        "Add another card"
+                    )
+                }
+            }
+        }
     }
 }

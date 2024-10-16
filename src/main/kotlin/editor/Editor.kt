@@ -2,7 +2,6 @@ package editor
 
 import Markdown
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -22,7 +21,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.getTextBeforeSelection
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 
@@ -55,7 +53,7 @@ fun Editor(vm: EditorViewModel = viewModel { EditorViewModel() },
     val state by vm.state.collectAsState()
     val density = LocalDensity.current.density
 
-    Box(modifier) {
+    Box {
         BasicTextField(
             value = state.content,
             cursorBrush = cursorBrush,
@@ -72,8 +70,7 @@ fun Editor(vm: EditorViewModel = viewModel { EditorViewModel() },
                 }
                 vm.updateContent(it)
             },
-            modifier = Modifier
-                .fillMaxSize()
+            modifier = modifier
                 .onPreviewKeyEvent {
                     if (vm.completionsState.isVisible()) {
                         if (it.key == Key.Escape && it.type == KeyEventType.KeyDown) {
