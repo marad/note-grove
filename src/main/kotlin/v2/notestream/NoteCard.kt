@@ -59,6 +59,7 @@ fun NoteCard(state: NoteCardState,
             }
             BasicTextField(
                 state.textFieldValue,
+                modifier = Modifier.fillMaxWidth(),
                 onValueChange = { value -> onChange(state.update(value)) },
                 textStyle = TextStyle(
                     fontFamily = editorFont,
