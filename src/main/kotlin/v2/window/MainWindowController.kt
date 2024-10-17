@@ -2,9 +2,11 @@ package v2.window
 
 import LauncherViewModel
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import v2.BufferManager
 import v2.notestream.NoteCardState
@@ -24,8 +26,10 @@ class MainWindowController(
     val streamLazyListState = LazyListState()
     val shortcuts = prepareActionsAndShortcuts(this)
 
-    fun updateState(current: MainWindowState, new: MainWindowState) {
-        _state.compareAndSet(current, new)
+    val currentNote = mutableStateOf(-1)
+
+    fun updateState(f: (MainWindowState) -> MainWindowState) {
+        _state.update(f)
     }
 
     fun openNote(noteName: NoteName) {
@@ -36,14 +40,11 @@ class MainWindowController(
                 streamLazyListState.animateScrollToItem(index)
             }
         } else {
-            updateState(
-                state.value,
-                state.value.copy(
+            updateState {
+               it.copy(
                     noteStreamState = stream.prependCard(
-                        NoteCardState(bufferManager.openBuffer(root.pathToFile(noteName)))
-                    )
-                )
-            )
+                        NoteCardState(bufferManager.openBuffer(root.pathToFile(noteName)))))
+            }
             coScope.launch {
                 streamLazyListState.animateScrollToItem(0)
             }

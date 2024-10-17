@@ -27,7 +27,6 @@ data class MainWindowState(
     val windowState: WindowState = WindowState(),
     private val roots: List<Root>,
     private val activeRoot: Int = 0,
-    val lastSelectedNote: Int = -1
 ) {
     init {
         assert(roots.isNotEmpty()) { "At least one root should be provided!" }
@@ -41,7 +40,6 @@ fun MainWindow(controller: MainWindowController,
                onCloseRequest: () -> Unit = {}) {
 
     val state by controller.state.collectAsState()
-    println(state.lastSelectedNote)
 
     Window(
         title = "Note Grove - ${state.root.name}",
@@ -70,14 +68,10 @@ fun MainWindow(controller: MainWindowController,
                         state.noteStreamState,
                         lazyListState = controller.streamLazyListState,
                         modifier = Modifier.weight(1f),
-                        onUpdate = { controller.updateState(state, state.copy(noteStreamState = it)) },
-                        outlineNote = state.lastSelectedNote,
+                        onUpdate = { stream -> controller.updateState { state.copy(noteStreamState = stream) } },
+                        outlineNote = controller.currentNote.value,
                         onItemFocused = { idx ->
-                            println(idx)
-                            controller.updateState(
-                                state,
-                                state.copy(lastSelectedNote = idx)
-                            )
+                            controller.currentNote.value = idx
                         }
                     )
                 }
