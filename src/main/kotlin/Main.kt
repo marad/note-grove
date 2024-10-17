@@ -20,7 +20,9 @@ import androidx.lifecycle.ViewModel
 import config.AppConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import window.NoteWindow
+import v2.BufferManager
+import v2.window.MainWindow
+import v2.window.MainWindowState
 import window.NoteWindowViewModel
 import java.nio.file.Path
 import kotlin.system.exitProcess
@@ -85,7 +87,7 @@ fun App(appVm: NoteWindowViewModel, onRequestCompletions: (tabViewModel: TabView
             color = Color.LightGray,
         )
 
-        Workspace(state.workspace, onRequestCompletions = onRequestCompletions)
+        //Workspace(state.workspace, onRequestCompletions = onRequestCompletions)
     }
 
 }
@@ -138,7 +140,7 @@ fun ToolBar(
 
 @Composable
 fun FileList() {
-    val root = Root("/home/marad/dendron/notes/")
+    val root = Root("test", "/home/marad/dendron/notes/")
     val files = root.searchFiles("")
 
     val scrollState = rememberScrollState()
@@ -161,32 +163,52 @@ fun FileList() {
 }
 
 fun main() = application {
-    val appVm = remember {
+//    val appVm = remember {
+//        val currentDir = Path.of("")
+//        val config = AppConfig.load(currentDir.resolve("config.toml"))
+//        if (config == null) {
+//            println("Config not found at ${currentDir.resolve("config.toml")}")
+//            exitProcess(1)
+//        }
+//        AppViewModel(
+//            appConfig = config,
+//        )
+//    }
+//
+//    val appState by appVm.state.collectAsState()
+//
+//    appState.windows.forEach { windowVm ->
+//        NoteWindow(windowVm,
+//            onCloseRequest = {
+//                appVm.closeWindow(windowVm)
+//                if (!appVm.hasWindows()) {
+//                    exitApplication()
+//                }
+//            },
+//            newWindowRequested = {
+//                appVm.newWindow()
+//            }
+//        )
+//    }
+
+    val bufferManager = remember { BufferManager() }
+
+    var state by remember {
         val currentDir = Path.of("")
-        val config = AppConfig.load(currentDir.resolve("config.toml"))
+        val configPath = currentDir.resolve("config.toml")
+        val config = AppConfig.load(configPath)
         if (config == null) {
-            println("Config not found at ${currentDir.resolve("config.toml")}")
+            println("Config not found at $configPath")
             exitProcess(1)
         }
-        AppViewModel(
-            appConfig = config,
-        )
+        val roots = config.roots.map {
+            Root(it.name, it.path)
+        }
+        mutableStateOf(MainWindowState(roots = roots, bufferManager = bufferManager))
     }
 
-    val appState by appVm.state.collectAsState()
-
-    appState.windows.forEach { windowVm ->
-        NoteWindow(windowVm,
-            onCloseRequest = {
-                appVm.closeWindow(windowVm)
-                if (!appVm.hasWindows()) {
-                    exitApplication()
-                }
-            },
-            newWindowRequested = {
-                appVm.newWindow()
-            }
-        )
-    }
+    MainWindow(state,
+        onUpdate = { state = it },
+        onCloseRequest = ::exitApplication)
 }
 

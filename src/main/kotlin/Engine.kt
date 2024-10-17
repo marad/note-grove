@@ -12,7 +12,7 @@ import kotlin.io.path.nameWithoutExtension
 
 fun main() {
     val path = "/home/marad/dendron/notes/"
-    val root = Root(path)
+    val root = Root("test", path)
 
 //    vault.searchFiles("gcp").forEach(::println)
 //    vault.search("sql").forEach(::println)
@@ -26,7 +26,7 @@ value class NoteName(val name: String) {
     override fun toString(): String = name
 }
 
-class Root(private val path: String) {
+class Root(val name: String, private val path: String) {
     private val files = FilesFacade.create()
     private val rg = RgFacade.create()
     private val sed = SedFacade.create()

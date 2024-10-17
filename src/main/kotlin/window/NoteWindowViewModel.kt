@@ -16,7 +16,7 @@ class NoteWindowViewModel(
     val actionLauncherViewModel: LauncherViewModel = LauncherViewModel(),
 ) : ViewModel() {
     private val _state = MutableStateFlow(NoteWindowState(
-        roots = roots.map { RootState(it.name, Root(it.path)) }
+        roots = roots.map { RootState(it.name, Root(it.name, it.path)) }
     ))
     val state = _state.asStateFlow()
 
