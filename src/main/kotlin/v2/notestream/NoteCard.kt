@@ -18,8 +18,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import editor.editorFont
 import v2.Buffer
 
 data class NoteCardState(
@@ -57,6 +60,10 @@ fun NoteCard(state: NoteCardState,
             BasicTextField(
                 state.textFieldValue,
                 onValueChange = { value -> onChange(state.update(value)) },
+                textStyle = TextStyle(
+                    fontFamily = editorFont,
+                    fontSize = 16.sp
+                ),
             )
         }
     }
