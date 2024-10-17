@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import v2.BufferManager
 import v2.window.MainWindow
-import v2.window.MainWindowState
+import v2.window.MainWindowController
 import window.NoteWindowViewModel
 import java.nio.file.Path
 import kotlin.system.exitProcess
@@ -191,9 +191,11 @@ fun main() = application {
 //        )
 //    }
 
+    val coScope = rememberCoroutineScope()
     val bufferManager = remember { BufferManager() }
 
-    var state by remember {
+
+    var controller = remember {
         val currentDir = Path.of("")
         val configPath = currentDir.resolve("config.toml")
         val config = AppConfig.load(configPath)
@@ -204,11 +206,10 @@ fun main() = application {
         val roots = config.roots.map {
             Root(it.name, it.path)
         }
-        mutableStateOf(MainWindowState(roots = roots, bufferManager = bufferManager))
+        MainWindowController(bufferManager, roots, coScope, LauncherViewModel())
     }
 
-    MainWindow(state,
-        onUpdate = { state = it },
+    MainWindow(controller,
         onCloseRequest = ::exitApplication)
 }
 

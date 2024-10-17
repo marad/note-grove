@@ -1,26 +1,30 @@
 package v2.window
 
+import ActionLauncherDialog
 import NoteName
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.Button
 import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
-import v2.BufferManager
-import v2.notestream.NoteCardState
 import v2.notestream.NoteStream
 import v2.notestream.NoteStreamState
+import androidx.compose.runtime.*
 
 data class MainWindowState(
     val noteStreamState: NoteStreamState = NoteStreamState(),
     val windowState: WindowState = WindowState(),
     private val roots: List<Root>,
     private val activeRoot: Int = 0,
-    val bufferManager: BufferManager
 ) {
     init {
         assert(roots.isNotEmpty()) { "At least one root should be provided!" }
@@ -29,33 +33,43 @@ data class MainWindowState(
     val root get() = roots[activeRoot]
 }
 
-fun openNote(state: MainWindowState, noteName: NoteName) =
-    state.copy(noteStreamState = state.noteStreamState.prependCard(
-        NoteCardState(state.bufferManager.openBuffer(state.root.pathToFile(noteName)))))
-
 @Composable
-fun MainWindow(state: MainWindowState,
-               onUpdate: (MainWindowState) -> Unit = {},
+fun MainWindow(controller: MainWindowController,
                onCloseRequest: () -> Unit = {}) {
+
+    val state by controller.state.collectAsState()
+
     Window(
         title = "Note Grove - ${state.root.name}",
         state = state.windowState,
-        onCloseRequest = onCloseRequest
+        onCloseRequest = onCloseRequest,
+        onPreviewKeyEvent = { event ->
+            controller.shortcuts.handle(event)
+        }
     ) {
-        Column {
-            Button(
-                onClick = {
-                    onUpdate(openNote(state, NoteName("test.note")))
-                }
-            ) {
-                Icon(Icons.Default.Add, "")
-            }
+        MaterialTheme {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column {
+                    Button(
+                        onClick = {
+                            controller.launcher.showInput {
+                                controller.openNote(NoteName(it))
+                            }
+                        }
+                    ) {
+                        Icon(Icons.Default.Add, "")
+                    }
 
-            NoteStream(
-                state.noteStreamState,
-                modifier = Modifier.weight(1f),
-                onUpdate = { onUpdate(state.copy(noteStreamState = it)) },
-            )
+                    NoteStream(
+                        state.noteStreamState,
+                        lazyListState = controller.streamLazyListState,
+                        modifier = Modifier.weight(1f),
+                        onUpdate = { controller.updateState(state.copy(noteStreamState = it)) },
+                    )
+                }
+
+                ActionLauncherDialog(controller.launcher)
+            }
         }
     }
 }
