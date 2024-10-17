@@ -11,26 +11,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.singleWindowApplication
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import notestream.NoteCardState
-import notestream.NoteStream
-import notestream.NoteStreamState
+import v2.Buffer
+import v2.notestream.NoteCardState
+import v2.notestream.NoteStream
+import v2.notestream.NoteStreamState
 
-
-class Buffer(val title: String, initalContent: AnnotatedString) {
-    private val _content = MutableStateFlow(initalContent)
-    val content = _content.asStateFlow()
-
-    fun updateContent(annotatedString: AnnotatedString) {
-        _content.value = annotatedString
-    }
-}
 
 fun main() {
     singleWindowApplication {
@@ -56,9 +45,6 @@ fun main() {
                     lazyListState = lazyListState,
                     onUpdate = { new -> state.value = new },
                     modifier = Modifier.weight(0.5f)
-                        .onFocusChanged {
-                            println(it)
-                        }
                 )
                 Button(
                     onClick = {

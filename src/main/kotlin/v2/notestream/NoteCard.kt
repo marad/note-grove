@@ -1,4 +1,4 @@
-package notestream
+package v2.notestream
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import v2.Buffer
 
 data class NoteCardState(
     val buffer: Buffer,
