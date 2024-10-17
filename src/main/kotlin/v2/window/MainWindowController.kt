@@ -24,8 +24,8 @@ class MainWindowController(
     val streamLazyListState = LazyListState()
     val shortcuts = prepareActionsAndShortcuts(this)
 
-    fun updateState(state: MainWindowState) {
-        _state.value = state
+    fun updateState(current: MainWindowState, new: MainWindowState) {
+        _state.compareAndSet(current, new)
     }
 
     fun openNote(noteName: NoteName) {
@@ -37,6 +37,7 @@ class MainWindowController(
             }
         } else {
             updateState(
+                state.value,
                 state.value.copy(
                     noteStreamState = stream.prependCard(
                         NoteCardState(bufferManager.openBuffer(root.pathToFile(noteName)))

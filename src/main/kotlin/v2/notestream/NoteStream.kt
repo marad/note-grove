@@ -1,15 +1,18 @@
 package v2.notestream
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -38,7 +41,9 @@ fun NoteStream(state: NoteStreamState,
                onUpdate: (NoteStreamState) -> Unit,
                onItemFocused: (Int) -> Unit = {},
                modifier: Modifier = Modifier,
-               lazyListState: LazyListState = LazyListState()) {
+               lazyListState: LazyListState = LazyListState(),
+               outlineNote: Int = 0
+               ) {
     if (state.cards.isNotEmpty()) {
         LazyColumn(
             modifier,
@@ -53,7 +58,15 @@ fun NoteStream(state: NoteStreamState,
                         if (it.hasFocus) {
                             onItemFocused(idx)
                         }
-                    })
+                    }.let {
+                        if (outlineNote == idx) {
+                            it.shadow(5.dp)
+                                .border(1.dp, Color.Gray, RoundedCornerShape(5.dp))
+                        } else {
+                            it
+                        }
+                    }
+                )
             }
         }
     } else {

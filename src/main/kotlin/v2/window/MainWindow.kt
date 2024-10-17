@@ -5,6 +5,7 @@ import NoteName
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -19,12 +20,14 @@ import androidx.compose.ui.window.WindowState
 import v2.notestream.NoteStream
 import v2.notestream.NoteStreamState
 import androidx.compose.runtime.*
+import androidx.compose.ui.unit.dp
 
 data class MainWindowState(
     val noteStreamState: NoteStreamState = NoteStreamState(),
     val windowState: WindowState = WindowState(),
     private val roots: List<Root>,
     private val activeRoot: Int = 0,
+    val lastSelectedNote: Int = -1
 ) {
     init {
         assert(roots.isNotEmpty()) { "At least one root should be provided!" }
@@ -38,6 +41,7 @@ fun MainWindow(controller: MainWindowController,
                onCloseRequest: () -> Unit = {}) {
 
     val state by controller.state.collectAsState()
+    println(state.lastSelectedNote)
 
     Window(
         title = "Note Grove - ${state.root.name}",
@@ -49,7 +53,9 @@ fun MainWindow(controller: MainWindowController,
     ) {
         MaterialTheme {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Column {
+                Column(
+                    Modifier.padding(10.dp)
+                ) {
                     Button(
                         onClick = {
                             controller.launcher.showInput {
@@ -64,7 +70,15 @@ fun MainWindow(controller: MainWindowController,
                         state.noteStreamState,
                         lazyListState = controller.streamLazyListState,
                         modifier = Modifier.weight(1f),
-                        onUpdate = { controller.updateState(state.copy(noteStreamState = it)) },
+                        onUpdate = { controller.updateState(state, state.copy(noteStreamState = it)) },
+                        outlineNote = state.lastSelectedNote,
+                        onItemFocused = { idx ->
+                            println(idx)
+                            controller.updateState(
+                                state,
+                                state.copy(lastSelectedNote = idx)
+                            )
+                        }
                     )
                 }
 
