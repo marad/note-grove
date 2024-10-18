@@ -57,7 +57,7 @@ class MainWindowController(
         }
     }
 
-    fun currentNoteCard(): NoteCardState? {
+    fun currentNote(): NoteCardState? {
         val index = currentNote.value
         return if (index >= 0 && index < state.value.noteStreamState.cards.size) {
             state.value.noteStreamState.cards[index]
@@ -67,12 +67,15 @@ class MainWindowController(
     }
 
     fun closeCurrentNote() {
-        if (currentNote.value >= 0 && currentNote.value < state.value.noteStreamState.cards.size) {
-            updateState {
-                it.copy(noteStreamState = it.noteStreamState.closeCardAt(currentNote.value))
-            }
+        currentNote()?.let(this::closeNote)
+    }
+
+    fun closeNote(card: NoteCardState) {
+        updateState { state ->
+            state.copy(noteStreamState = state.noteStreamState.closeCard(card))
         }
     }
+
 
     fun saveNoteCard(card: NoteCardState) {
         val content = card.buffer.content.value.text
@@ -92,9 +95,7 @@ class MainWindowController(
     }
 
     fun deleteNote(card: NoteCardState) {
-        updateState { state ->
-            state.copy(noteStreamState = state.noteStreamState.closeCard(card))
-        }
+        closeNote(card)
         Files.delete(card.buffer.path)
     }
 }

@@ -78,7 +78,7 @@ private fun searchActions(ctl: MainWindowController, appActions: List<Action>, n
 
 fun createSearchNoteAction(ctl: MainWindowController, appActions: List<Action>): Action =
     Action("Search note", "Shows search note dialog") {
-        val currentNoteTitle = ctl.currentNoteCard()?.buffer?.title
+        val currentNoteTitle = ctl.currentNote()?.buffer?.title
         ctl.launcher.show(currentNoteTitle, selectText = currentNoteTitle != null, forceAccept = { name ->
             ctl.openNote(NoteName(name))
         }) {
@@ -100,7 +100,7 @@ fun createCloseCurrentNoteAction(mainWindowController: MainWindowController): Ac
 
 fun createSaveAction(ctl: MainWindowController): Action =
     Action("Save", "Saves current file") {
-        ctl.currentNoteCard()?.let { card ->
+        ctl.currentNote()?.let { card ->
             ctl.saveNoteCard(card)
         }
     }
@@ -108,7 +108,7 @@ fun createSaveAction(ctl: MainWindowController): Action =
 
 fun newNoteAction(ctl: MainWindowController): Action =
     Action("New note", "Creates a new note") {
-        val card = ctl.currentNoteCard()
+        val card = ctl.currentNote()
         val title = card?.buffer?.title ?: ""
 
         ctl.launcher.showInput(initialQuery = title) { fileName ->
@@ -120,7 +120,7 @@ fun newNoteAction(ctl: MainWindowController): Action =
 fun createDeleteAction(ctl: MainWindowController): Action =
     Action("Delete", "Deletes current file") {
         // get current note name
-        val card = ctl.currentNoteCard()
+        val card = ctl.currentNote()
         val question = card?.buffer?.title?.let {
             "Are you sure that you want to delete $it?"
         } ?: "Are you sure that you want to delete this note?"
