@@ -114,6 +114,9 @@ class MainWindowController(
     fun renameNote(old: NoteName, new: NoteName) {
         val oldCard = getNote(old)
         if (oldCard != null) {
+            // FIXME: buffers should store their roots
+            //        right now renaming moves the note to current root!
+            //        notes could also have a "pill" with root name and color
             val updatedNotes = root.renameNote(old, new)
             // FIXME: this should probably update buffer state in place
             //        so that cards in other windows would update as well
