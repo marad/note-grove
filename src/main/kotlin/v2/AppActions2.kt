@@ -5,11 +5,8 @@ import NoteName
 import Shortcut
 import Shortcuts
 import androidx.compose.ui.input.key.Key
-import com.sun.tools.javac.Main
 import files.internal.MatchingStrategy
 import v2.window.MainWindowController
-import v2.window.MainWindowState
-import window.NoteWindowViewModel
 
 fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shortcuts {
     val shortcuts = Shortcuts()
@@ -17,7 +14,7 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
 
 
 //    val saveAction = createSaveAction(windowVm)
-//    val closeTabAction = createCloseTabAction(windowVm)
+    val closeCurrentNoteAction = createCloseCurrentNoteAction(mainWindowController)
 //    val newNoteAction = newNoteAction(windowVm)
 //    val deleteNoteAction = createDeleteAction(windowVm)
 //    val renameNoteAction = createRenameNoteAction(windowVm)
@@ -37,9 +34,9 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
 //    val searchPhrase = createSearchPhraseAction(windowVm)
 
     appActions.addAll(listOf(
-//        saveAction, closeTabAction, newNoteAction, deleteNoteAction, renameNoteAction, selectRootAction,
+//        saveAction, newNoteAction, deleteNoteAction, renameNoteAction, selectRootAction,
 //        cycleRootAction, createRefactorHierarchyAction(windowVm), followLinkAction,
-        showNoteSearchDialog, showActionSearchDialog,
+        closeCurrentNoteAction, showNoteSearchDialog, showActionSearchDialog,
 //        openDailyNote, previousDailyNote, nextDailyNote,
 //        openWeeklyNote, previousWeeklyNote, nextWeeklyNote, insertTemplate, jumpToBacklink, searchPhrase
     ))
@@ -47,7 +44,7 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
     appActions.sortBy { it.name }
 
 //    shortcuts.add(Shortcut(Key.S, KeyModifier.Ctrl), saveAction)
-//    shortcuts.add(Shortcut(Key.W, KeyModifier.Ctrl), closeTabAction)
+    shortcuts.add(Shortcut(Key.W, KeyModifier.Ctrl), closeCurrentNoteAction)
 //    shortcuts.add(Shortcut(Key.N, KeyModifier.Ctrl), newNoteAction)
 //    shortcuts.add(Shortcut(Key.R, KeyModifier.Ctrl, KeyModifier.Shift), selectRootAction)
 //    shortcuts.add(Shortcut(Key.R, KeyModifier.Ctrl), cycleRootAction)
@@ -80,7 +77,7 @@ private fun searchActions(ctl: MainWindowController, appActions: List<Action>, n
 
 fun createSearchNoteAction(ctl: MainWindowController, appActions: List<Action>): Action =
     Action("Search note", "Shows search note dialog") {
-        val currentNoteTitle = "" // FIXME add getting current note
+        val currentNoteTitle = ctl.currentNoteCard()?.buffer?.title
         ctl.launcher.show(currentNoteTitle, selectText = currentNoteTitle != null, forceAccept = { name ->
             ctl.openNote(NoteName(name))
         }) {
@@ -95,11 +92,11 @@ fun createSearchActionsAction(ctl: MainWindowController, appActions: List<Action
         }
     }
 
-//fun createCloseTabAction(appVm: NoteWindowViewModel): Action =
-//    Action("Close tab", "Closes current editor tab") {
-//        appVm.state.value.workspace.closeActiveTab()
-//    }
-//
+fun createCloseCurrentNoteAction(mainWindowController: MainWindowController): Action =
+    Action("Close selected note", "Closes currently selected note") {
+        mainWindowController.closeCurrentNote()
+    }
+
 //fun createSaveAction(appVm: NoteWindowViewModel): Action =
 //    Action("Save", "Saves current file") {
 //        appVm.state.value.workspace.activeTab()?.let { tab ->

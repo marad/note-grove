@@ -51,4 +51,21 @@ class MainWindowController(
         }
     }
 
+    fun currentNoteCard(): NoteCardState? {
+        val index = currentNote.value
+        return if (index >= 0 && index < state.value.noteStreamState.cards.size) {
+            state.value.noteStreamState.cards[index]
+        } else {
+            null
+        }
+    }
+
+    fun closeCurrentNote() {
+        if (currentNote.value >= 0 && currentNote.value < state.value.noteStreamState.cards.size) {
+            updateState {
+                it.copy(noteStreamState = it.noteStreamState.closeCardAt(currentNote.value))
+            }
+        }
+    }
+
 }
