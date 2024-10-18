@@ -153,7 +153,7 @@ fun FileList() {
             .width(200.dp)
     ) {
         for (file in files) {
-            Text(file.name, overflow = TextOverflow.Ellipsis, maxLines = 1,
+            Text(file.value, overflow = TextOverflow.Ellipsis, maxLines = 1,
                 modifier = Modifier.selectable(selected == file, onClick = {
                     selected = file
                 }))

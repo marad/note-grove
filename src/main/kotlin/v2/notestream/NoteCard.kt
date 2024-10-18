@@ -31,7 +31,7 @@ data class NoteCardState(
     val buffer: Buffer,
     val selection: TextRange = TextRange.Zero
 ) {
-    val title get() = buffer.title
+    val title get() = buffer.name.value
     val textFieldValue get() = TextFieldValue(buffer.content.value, selection)
 
     fun update(textFieldValue: TextFieldValue): NoteCardState {
@@ -54,7 +54,7 @@ fun NoteCard(state: NoteCardState,
         Column(Modifier.padding(8.dp)) {
             Row(Modifier.padding(vertical = 10.dp).fillMaxWidth()) {
                 Text(
-                    state.buffer.title,
+                    state.buffer.name.value,
                     style = MaterialTheme.typography.h6)
                 Spacer(Modifier.weight(1f))
                 Icon(

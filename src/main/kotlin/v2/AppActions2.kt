@@ -68,7 +68,7 @@ private fun searchActions(ctl: MainWindowController, appActions: List<Action>, n
         }
     } else {
         ctl.root.searchFiles(name, MatchingStrategy::fuzzy).map {
-            Action(it.name) {
+            Action(it.value) {
                 ctl.openNote(it)
             }
         }
@@ -77,7 +77,7 @@ private fun searchActions(ctl: MainWindowController, appActions: List<Action>, n
 
 fun createSearchNoteAction(ctl: MainWindowController, appActions: List<Action>): Action =
     Action("Search note", "Shows search note dialog") {
-        val currentNoteTitle = ctl.currentNote()?.buffer?.title
+        val currentNoteTitle = ctl.currentNote()?.buffer?.name?.value
         ctl.launcher.show(currentNoteTitle, selectText = currentNoteTitle != null, forceAccept = { name ->
             ctl.openNote(NoteName(name))
         }) {
@@ -108,7 +108,7 @@ fun createSaveAction(ctl: MainWindowController): Action =
 fun newNoteAction(ctl: MainWindowController): Action =
     Action("New note", "Creates a new note") {
         val card = ctl.currentNote()
-        val title = card?.buffer?.title ?: ""
+        val title = card?.title ?: ""
 
         ctl.launcher.showInput(initialQuery = title) { fileName ->
             ctl.openNote(NoteName(fileName))

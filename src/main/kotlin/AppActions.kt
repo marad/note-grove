@@ -69,7 +69,7 @@ private fun searchActions(appVm: NoteWindowViewModel, appActions: List<Action>, 
     } else {
         val root = appVm.state.value.root
         root.searchFiles(name, MatchingStrategy::fuzzy).map {
-            Action(it.name) {
+            Action(it.value) {
                 appVm.openNote(it)
             }
         }
@@ -198,11 +198,11 @@ fun createRefactorHierarchyAction(appVm: NoteWindowViewModel): Action =
         appVm.actionLauncherViewModel.show(initialQuery = name) { srcPattern ->
             val files = root.searchFiles(srcPattern, MatchingStrategy::contains)
             files.map { file ->
-                Action(file.name) {
+                Action(file.value) {
                     // show input dialog to get the destination pattern
                     appVm.actionLauncherViewModel.show { dstPattern ->
                         files.map {
-                            Action("${it.name} > ${it.name.replace(srcPattern, dstPattern)}") {
+                            Action("${it.value} > ${it.value.replace(srcPattern, dstPattern)}") {
                                 appVm.refactorHierarchy(srcPattern, dstPattern, files)
                             }
                         }
@@ -313,7 +313,7 @@ fun createInsertTemplateAction(appVm: NoteWindowViewModel): Action =
         appVm.actionLauncherViewModel.show("", placeholder = "Select a template...") { query ->
             val root = appVm.state.value.root
             val templates = root.searchFiles("templates.", { entry, pattern -> entry.startsWith(pattern)} )
-                .map { it.name.removePrefix("") }
+                .map { it.value.removePrefix("") }
 
             templates.filter { it.contains(query, ignoreCase = true) }
                 .map { template ->

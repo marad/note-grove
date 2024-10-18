@@ -37,7 +37,7 @@ class MainWindowController(
     }
 
     fun openNote(noteName: NoteName) {
-        val index = stream.cards.find { it.buffer.title == noteName.name }
+        val index = stream.cards.find { it.buffer.name == noteName }
             ?.let { stream.cards.indexOf(it) }
         if (index != null) {
             coScope.launch {
@@ -48,7 +48,7 @@ class MainWindowController(
                it.copy(
                     noteStreamState = stream.prependCard(
                         NoteCardState(bufferManager.openBuffer(root, noteName) {
-                            Templates.newNote(root, noteName.name, NoteName("templates.note"))
+                            Templates.newNote(root, noteName.value, NoteName("templates.note"))
                         })))
             }
             coScope.launch {
@@ -58,7 +58,7 @@ class MainWindowController(
     }
 
     fun getNote(name: NoteName): NoteCardState? =
-        state.value.noteStreamState.cards.find { it.title == name.name }
+        state.value.noteStreamState.cards.find { it.title == name.value }
 
     fun currentNote(): NoteCardState? {
         val index = selectedNoteIndex.value
@@ -119,7 +119,7 @@ class MainWindowController(
             // FIXME: this should probably update buffer state in place
             //        so that cards in other windows would update as well
             val newCard = NoteCardState(bufferManager.openBuffer(root, new) {
-                Templates.newNote(root, new.name, NoteName("templates.note"))
+                Templates.newNote(root, new.value, NoteName("templates.note"))
             })
             bufferManager.removeBuffer(oldCard.buffer.path)
             replaceNote(oldCard, newCard)

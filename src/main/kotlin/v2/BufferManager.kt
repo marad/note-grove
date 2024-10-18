@@ -8,7 +8,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.nameWithoutExtension
 
-class Buffer(val title: String,
+class Buffer(val name: NoteName,
              val path: Path,
              val root: Root,
              initialContent: AnnotatedString) {
@@ -35,7 +35,7 @@ class BufferManager {
             return buffer
         } else {
             val content = if (Files.exists(file)) Files.readString(file) else defaultContent()
-            val buffer = Buffer(file.nameWithoutExtension, file, root, AnnotatedString(content))
+            val buffer = Buffer(noteName, file, root, AnnotatedString(content))
             buffers[file] = WeakReference(buffer)
             return buffer
         }
@@ -43,7 +43,7 @@ class BufferManager {
 
     fun reloadBuffer(noteName: NoteName) {
         buffers.mapNotNull { it.value.get() }
-            .filter { it.title == noteName.name }
+            .filter { it.name == noteName }
             .forEach {
                 it.reload()
             }

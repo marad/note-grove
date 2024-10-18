@@ -12,7 +12,7 @@ object Templates {
 
     fun loadTemplate(root: Root, name: NoteName): String {
         val template = loadTemplateOrDefault(root, name)
-        return applyTemplate(template, mapOf("title" to name.name))
+        return applyTemplate(template, mapOf("title" to name.value))
     }
 
     private fun applyTemplate(templateContent: String, vars: Map<String, String>): String {

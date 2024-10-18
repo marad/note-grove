@@ -55,7 +55,7 @@ class NoteWindowViewModel(
         val root = state.value.root
         val updatedNotes = mutableSetOf<NoteName>()
         files.forEach {
-            val newName = NoteName(it.name.replace(srcPattern, dstPattern))
+            val newName = NoteName(it.value.replace(srcPattern, dstPattern))
             state.value.workspace.updateTabFile(root.pathToFile(it), root.pathToFile(newName))
             updatedNotes.addAll(root.renameNote(it, newName))
         }

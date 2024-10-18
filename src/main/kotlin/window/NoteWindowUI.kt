@@ -40,7 +40,7 @@ fun NoteWindow(vm: NoteWindowViewModel,
             Surface {
                 App(vm, onRequestCompletions = { tab, query ->
                     val root = vm.state.value.root
-                    root.searchFiles(query).map { it.name }
+                    root.searchFiles(query).map { it.value }
                 })
             }
 

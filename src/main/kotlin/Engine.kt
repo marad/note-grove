@@ -22,8 +22,8 @@ fun main() {
 }
 
 @JvmInline
-value class NoteName(val name: String) {
-    override fun toString(): String = name
+value class NoteName(val value: String) {
+    override fun toString(): String = value
 }
 
 class Root(val name: String, private val path: String) {
@@ -44,12 +44,12 @@ class Root(val name: String, private val path: String) {
         rg.search(pattern, path)
 
     fun searchBacklinks(noteName: NoteName): List<Entry> =
-        searchInFiles("\\[\\[${noteName.name}[^\\]]*\\]\\]")
+        searchInFiles("\\[\\[${noteName.value}[^\\]]*\\]\\]")
 
     fun renameNote(oldName: NoteName, newName: NoteName): List<NoteName> {
         val updatedNotes = mutableListOf<NoteName>()
         searchBacklinks(oldName).filterIsInstance<Begin>().forEach {
-            sed.replace(oldName.name, newName.name, it.path)
+            sed.replace(oldName.value, newName.value, it.path)
             updatedNotes.add(getNoteName(Paths.get(it.path)))
         }
 
