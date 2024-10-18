@@ -15,7 +15,7 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
 
     val saveAction = createSaveAction(mainWindowController)
     val closeCurrentNoteAction = createCloseCurrentNoteAction(mainWindowController)
-//    val newNoteAction = newNoteAction(windowVm)
+    val newNoteAction = newNoteAction(mainWindowController)
 //    val deleteNoteAction = createDeleteAction(windowVm)
 //    val renameNoteAction = createRenameNoteAction(windowVm)
 //    val selectRootAction = createSelectRootAction(windowVm)
@@ -34,8 +34,8 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
 //    val searchPhrase = createSearchPhraseAction(windowVm)
 
     appActions.addAll(listOf(
-        saveAction,
-        //newNoteAction, deleteNoteAction, renameNoteAction, selectRootAction,
+        saveAction, newNoteAction,
+        //, deleteNoteAction, renameNoteAction, selectRootAction,
 //        cycleRootAction, createRefactorHierarchyAction(windowVm), followLinkAction,
         closeCurrentNoteAction, showNoteSearchDialog, showActionSearchDialog,
 //        openDailyNote, previousDailyNote, nextDailyNote,
@@ -106,22 +106,17 @@ fun createSaveAction(ctl: MainWindowController): Action =
     }
 
 
-//fun newNoteAction(appVm: NoteWindowViewModel): Action =
-//    Action("New note", "Creates a new note") {
-//        val activeTab = appVm.state.value.workspace.activeTab()
-//        val title = activeTab?.title
-//        appVm.actionLauncherViewModel.showInput(initialQuery = title ?: "") { fileName ->
-//            val root = appVm.state.value.root
-//
-//            val path = root.pathToFile(NoteName(fileName))
-//            val title = fileName.split(".").last()
-//            val content = Templates.newNote(root, title, NoteName("templates.note"))
-//            appVm.state.value.workspace.addTab(path, content)
-//        }
-//
-//    }
-//
-//
+fun newNoteAction(ctl: MainWindowController): Action =
+    Action("New note", "Creates a new note") {
+        val card = ctl.currentNoteCard()
+        val title = card?.buffer?.title ?: ""
+
+        ctl.launcher.showInput(initialQuery = title) { fileName ->
+            ctl.openNote(NoteName(fileName))
+        }
+    }
+
+
 //fun createDeleteAction(appVm: NoteWindowViewModel): Action =
 //    Action("Delete", "Deletes current file") {
 //        // get current note name

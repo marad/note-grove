@@ -1,6 +1,7 @@
 package v2.window
 
 import LauncherViewModel
+import NoteName
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.text.AnnotatedString
@@ -46,7 +47,9 @@ class MainWindowController(
             updateState {
                it.copy(
                     noteStreamState = stream.prependCard(
-                        NoteCardState(bufferManager.openBuffer(root.pathToFile(noteName)))))
+                        NoteCardState(bufferManager.openBuffer(root.pathToFile(noteName)) {
+                            Templates.newNote(root, noteName.name, NoteName("templates.note"))
+                        })))
             }
             coScope.launch {
                 streamLazyListState.animateScrollToItem(0)
