@@ -31,6 +31,9 @@ data class NoteStreamState(
     fun closeCardAt(index: Int): NoteStreamState =
         copy(cards = cards.filterIndexed { idx, _ -> idx != index })
 
+    fun closeCard(card: NoteCardState): NoteStreamState =
+        copy(cards = cards.filterNot { it == card })
+
     fun prependCard(card: NoteCardState): NoteStreamState {
         return copy(cards = listOf(card) + cards)
     }

@@ -16,7 +16,7 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
     val saveAction = createSaveAction(mainWindowController)
     val closeCurrentNoteAction = createCloseCurrentNoteAction(mainWindowController)
     val newNoteAction = newNoteAction(mainWindowController)
-//    val deleteNoteAction = createDeleteAction(windowVm)
+    val deleteNoteAction = createDeleteAction(mainWindowController)
 //    val renameNoteAction = createRenameNoteAction(windowVm)
 //    val selectRootAction = createSelectRootAction(windowVm)
 //    val cycleRootAction = createCycleRootAction(windowVm)
@@ -34,8 +34,8 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
 //    val searchPhrase = createSearchPhraseAction(windowVm)
 
     appActions.addAll(listOf(
-        saveAction, newNoteAction,
-        //, deleteNoteAction, renameNoteAction, selectRootAction,
+        saveAction, newNoteAction, deleteNoteAction,
+        // renameNoteAction, selectRootAction,
 //        cycleRootAction, createRefactorHierarchyAction(windowVm), followLinkAction,
         closeCurrentNoteAction, showNoteSearchDialog, showActionSearchDialog,
 //        openDailyNote, previousDailyNote, nextDailyNote,
@@ -117,28 +117,25 @@ fun newNoteAction(ctl: MainWindowController): Action =
     }
 
 
-//fun createDeleteAction(appVm: NoteWindowViewModel): Action =
-//    Action("Delete", "Deletes current file") {
-//        // get current note name
-//        val activeTab = appVm.state.value.workspace.activeTab()
-//        val question = activeTab?.title?.let {
-//            "Are you sure that you want to delete $it?"
-//        } ?: "Are you sure that you want to delete this note?"
-//
-//        appVm.actionLauncherViewModel.showConfirm(
-//            onConfirm = {
-//                activeTab?.path?.let {
-//                    Files.deleteIfExists(it)
-//                    appVm.state.value.workspace.closeActiveTab()
-//                }
-//            },
-//            onCancel = {
-//                // do nothing
-//            }
-//        )
-//
-//    }
-//
+fun createDeleteAction(ctl: MainWindowController): Action =
+    Action("Delete", "Deletes current file") {
+        // get current note name
+        val card = ctl.currentNoteCard()
+        val question = card?.buffer?.title?.let {
+            "Are you sure that you want to delete $it?"
+        } ?: "Are you sure that you want to delete this note?"
+
+        ctl.launcher.showConfirm(
+            onConfirm = {
+                card?.let(ctl::deleteNote)
+            },
+            onCancel = {
+                // do nothing
+            }
+        )
+
+    }
+
 //fun createRenameNoteAction(appVm: NoteWindowViewModel): Action =
 //    Action("Rename", "Renames current file") {
 //        val activeTab = appVm.state.value.workspace.activeTab()

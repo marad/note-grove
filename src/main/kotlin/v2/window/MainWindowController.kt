@@ -90,4 +90,11 @@ class MainWindowController(
         }
         Files.write(file, updatedContent.toByteArray())
     }
+
+    fun deleteNote(card: NoteCardState) {
+        updateState { state ->
+            state.copy(noteStreamState = state.noteStreamState.closeCard(card))
+        }
+        Files.delete(card.buffer.path)
+    }
 }
