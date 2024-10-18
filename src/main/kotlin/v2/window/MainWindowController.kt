@@ -47,7 +47,7 @@ class MainWindowController(
             updateState {
                it.copy(
                     noteStreamState = stream.prependCard(
-                        NoteCardState(bufferManager.openBuffer(root.pathToFile(noteName)) {
+                        NoteCardState(bufferManager.openBuffer(root, root.pathToFile(noteName)) {
                             Templates.newNote(root, noteName.name, NoteName("templates.note"))
                         })))
             }
@@ -114,13 +114,11 @@ class MainWindowController(
     fun renameNote(old: NoteName, new: NoteName) {
         val oldCard = getNote(old)
         if (oldCard != null) {
-            // FIXME: buffers should store their roots
-            //        right now renaming moves the note to current root!
-            //        notes could also have a "pill" with root name and color
+            val root = oldCard.buffer.root
             val updatedNotes = root.renameNote(old, new)
             // FIXME: this should probably update buffer state in place
             //        so that cards in other windows would update as well
-            val newCard = NoteCardState(bufferManager.openBuffer(root.pathToFile(new)) {
+            val newCard = NoteCardState(bufferManager.openBuffer(root, root.pathToFile(new)) {
                 Templates.newNote(root, new.name, NoteName("templates.note"))
             })
             bufferManager.removeBuffer(oldCard.buffer.path)

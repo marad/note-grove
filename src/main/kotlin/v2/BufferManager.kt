@@ -10,6 +10,7 @@ import kotlin.io.path.nameWithoutExtension
 
 class Buffer(val title: String,
              val path: Path,
+             val root: Root,
              initialContent: AnnotatedString) {
     private val _content = MutableStateFlow(initialContent)
     val content = _content.asStateFlow()
@@ -27,13 +28,13 @@ class Buffer(val title: String,
 class BufferManager {
     private val buffers = mutableMapOf<Path, WeakReference<Buffer>>()
 
-    fun openBuffer(file: Path, defaultContent: () -> String = {""}): Buffer {
+    fun openBuffer(root: Root, file: Path, defaultContent: () -> String = {""}): Buffer {
         val buffer = buffers[file]?.get()
         if (buffer != null) {
             return buffer
         } else {
             val content = if (Files.exists(file)) Files.readString(file) else defaultContent()
-            val buffer = Buffer(file.nameWithoutExtension, file, AnnotatedString(content))
+            val buffer = Buffer(file.nameWithoutExtension, file, root, AnnotatedString(content))
             buffers[file] = WeakReference(buffer)
             return buffer
         }
