@@ -28,7 +28,8 @@ class Buffer(val title: String,
 class BufferManager {
     private val buffers = mutableMapOf<Path, WeakReference<Buffer>>()
 
-    fun openBuffer(root: Root, file: Path, defaultContent: () -> String = {""}): Buffer {
+    fun openBuffer(root: Root, noteName: NoteName, defaultContent: () -> String = {""}): Buffer {
+        val file = root.pathToFile(noteName)
         val buffer = buffers[file]?.get()
         if (buffer != null) {
             return buffer
