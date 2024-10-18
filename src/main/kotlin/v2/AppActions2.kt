@@ -13,7 +13,7 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
     val appActions = mutableListOf<Action>()
 
 
-//    val saveAction = createSaveAction(windowVm)
+    val saveAction = createSaveAction(mainWindowController)
     val closeCurrentNoteAction = createCloseCurrentNoteAction(mainWindowController)
 //    val newNoteAction = newNoteAction(windowVm)
 //    val deleteNoteAction = createDeleteAction(windowVm)
@@ -34,7 +34,8 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
 //    val searchPhrase = createSearchPhraseAction(windowVm)
 
     appActions.addAll(listOf(
-//        saveAction, newNoteAction, deleteNoteAction, renameNoteAction, selectRootAction,
+        saveAction,
+        //newNoteAction, deleteNoteAction, renameNoteAction, selectRootAction,
 //        cycleRootAction, createRefactorHierarchyAction(windowVm), followLinkAction,
         closeCurrentNoteAction, showNoteSearchDialog, showActionSearchDialog,
 //        openDailyNote, previousDailyNote, nextDailyNote,
@@ -43,7 +44,7 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
 
     appActions.sortBy { it.name }
 
-//    shortcuts.add(Shortcut(Key.S, KeyModifier.Ctrl), saveAction)
+    shortcuts.add(Shortcut(Key.S, KeyModifier.Ctrl), saveAction)
     shortcuts.add(Shortcut(Key.W, KeyModifier.Ctrl), closeCurrentNoteAction)
 //    shortcuts.add(Shortcut(Key.N, KeyModifier.Ctrl), newNoteAction)
 //    shortcuts.add(Shortcut(Key.R, KeyModifier.Ctrl, KeyModifier.Shift), selectRootAction)
@@ -97,27 +98,14 @@ fun createCloseCurrentNoteAction(mainWindowController: MainWindowController): Ac
         mainWindowController.closeCurrentNote()
     }
 
-//fun createSaveAction(appVm: NoteWindowViewModel): Action =
-//    Action("Save", "Saves current file") {
-//        appVm.state.value.workspace.activeTab()?.let { tab ->
-//            val content = tab.editorViewModel.content.text
-//
-//            val md = Markdown.parse(content)
-//            val visitor = NodeVisitor(
-//                Markdown.updateYamlFrontmatterVisitHandler("updated",
-//                    System.currentTimeMillis().toString())
-//            )
-//            visitor.visit(md)
-//
-//            val updatedContent = md.chars.toString()
-//            tab.editorViewModel.updateContent(updatedContent)
-//
-//            Files.write(tab.path, updatedContent.toByteArray())
-//            tab.editorViewModel.clearDirty()
-//        }
-//    }
-//
-//
+fun createSaveAction(ctl: MainWindowController): Action =
+    Action("Save", "Saves current file") {
+        ctl.currentNoteCard()?.let { card ->
+            ctl.saveNoteCard(card)
+        }
+    }
+
+
 //fun newNoteAction(appVm: NoteWindowViewModel): Action =
 //    Action("New note", "Creates a new note") {
 //        val activeTab = appVm.state.value.workspace.activeTab()

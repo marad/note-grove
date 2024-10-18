@@ -22,7 +22,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.*
 import editor.editorFont
+import kotlinx.coroutines.flow.map
 import v2.Buffer
 
 data class NoteCardState(
@@ -43,6 +45,10 @@ fun NoteCard(state: NoteCardState,
              onChange: (NoteCardState) -> Unit = {},
              onClose: () -> Unit = {}
 ) {
+    val content by state.buffer.content.map {
+        TextFieldValue(it, state.selection)
+    }.collectAsState(state.textFieldValue)
+
     Card(modifier) {
         Column(Modifier.padding(8.dp)) {
             Row(Modifier.padding(vertical = 10.dp).fillMaxWidth()) {
@@ -58,7 +64,7 @@ fun NoteCard(state: NoteCardState,
                 )
             }
             BasicTextField(
-                state.textFieldValue,
+                content,
                 modifier = Modifier.fillMaxWidth(),
                 onValueChange = { value -> onChange(state.update(value)) },
                 textStyle = TextStyle(

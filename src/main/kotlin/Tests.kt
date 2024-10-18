@@ -19,15 +19,16 @@ import v2.Buffer
 import v2.notestream.NoteCardState
 import v2.notestream.NoteStream
 import v2.notestream.NoteStreamState
+import java.nio.file.Paths
 
 
 fun main() {
     singleWindowApplication {
         val text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus ultricies aliquam egestas. Etiam tempus in enim quis vulputate. Cras orci arcu, porttitor vitae tellus sed, ullamcorper auctor lorem. Morbi erat justo, fringilla in purus at, hendrerit molestie enim. Cras eget magna leo. Nulla posuere ut sapien in tristique. Curabitur sodales maximus tempor. Nunc sit amet tempor mi, vitae imperdiet ligula. Proin tristique, enim vel vestibulum feugiat, quam odio ullamcorper nibh, eget efficitur augue felis eu tortor. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. In nisl metus, venenatis a massa sed, ullamcorper ultrices elit."
-        val cardA = NoteCardState(Buffer("title a", AnnotatedString(text)))
-        val cardB = NoteCardState(Buffer("title b", AnnotatedString("Donec efficitur elementum sem ut tempor. Ut sit amet arcu sit amet dui fringilla tincidunt vel quis erat. In eget diam efficitur turpis pulvinar sollicitudin eget nec diam. Fusce non tincidunt diam. Pellentesque a mauris eu eros pretium consectetur eu sit amet velit. Suspendisse augue metus, euismod eu tincidunt sed, auctor sit amet nibh. Etiam sed metus sollicitudin, placerat dolor a, porta leo. Cras in volutpat erat.")))
+        val cardA = NoteCardState(Buffer("title a", Paths.get(""), AnnotatedString(text)))
+        val cardB = NoteCardState(Buffer("title b", Paths.get(""), AnnotatedString("Donec efficitur elementum sem ut tempor. Ut sit amet arcu sit amet dui fringilla tincidunt vel quis erat. In eget diam efficitur turpis pulvinar sollicitudin eget nec diam. Fusce non tincidunt diam. Pellentesque a mauris eu eros pretium consectetur eu sit amet velit. Suspendisse augue metus, euismod eu tincidunt sed, auctor sit amet nibh. Etiam sed metus sollicitudin, placerat dolor a, porta leo. Cras in volutpat erat.")))
 
-        val sharedBuffer = Buffer("title c", AnnotatedString("shared content"))
+        val sharedBuffer = Buffer("title c", Paths.get(""), AnnotatedString("shared content"))
         val cardC = NoteCardState(sharedBuffer)
         val cardD = NoteCardState(sharedBuffer)
 
@@ -48,7 +49,7 @@ fun main() {
                 )
                 Button(
                     onClick = {
-                        val card = NoteCardState(Buffer("generated", AnnotatedString(text)))
+                        val card = NoteCardState(Buffer("generated", Paths.get(""), AnnotatedString(text)))
                         state.value = state.value.prependCard(card)
                         scope.launch {
                             lazyListState.animateScrollToItem(0)

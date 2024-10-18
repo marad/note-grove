@@ -3,6 +3,8 @@ package v2.window
 import LauncherViewModel
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.text.AnnotatedString
+import com.vladsch.flexmark.util.ast.NodeVisitor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -11,6 +13,7 @@ import kotlinx.coroutines.launch
 import v2.BufferManager
 import v2.notestream.NoteCardState
 import v2.prepareActionsAndShortcuts
+import java.nio.file.Files
 
 class MainWindowController(
     private val bufferManager: BufferManager,
@@ -68,4 +71,20 @@ class MainWindowController(
         }
     }
 
+    fun saveNoteCard(card: NoteCardState) {
+        val content = card.buffer.content.value.text
+        val file = card.buffer.path
+        val md = Markdown.parse(content)
+        val visitor = NodeVisitor(
+            Markdown.updateYamlFrontmatterVisitHandler("updated",
+                System.currentTimeMillis().toString())
+        )
+        visitor.visit(md)
+
+        val updatedContent = md.chars.toString()
+        coScope.launch {
+            card.buffer.updateContent(AnnotatedString(updatedContent))
+        }
+        Files.write(file, updatedContent.toByteArray())
+    }
 }

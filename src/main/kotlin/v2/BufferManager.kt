@@ -8,12 +8,14 @@ import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.nameWithoutExtension
 
-class Buffer(val title: String, initialContent: AnnotatedString) {
+class Buffer(val title: String,
+             val path: Path,
+             initialContent: AnnotatedString) {
     private val _content = MutableStateFlow(initialContent)
     val content = _content.asStateFlow()
 
     fun updateContent(annotatedString: AnnotatedString) {
-        _content.value = annotatedString
+        _content.tryEmit(annotatedString)
     }
 }
 
@@ -27,7 +29,7 @@ class BufferManager {
             return buffer
         } else {
             val content = if (Files.exists(file)) Files.readString(file) else defaultContent
-            val buffer = Buffer(file.nameWithoutExtension, AnnotatedString(content))
+            val buffer = Buffer(file.nameWithoutExtension, file, AnnotatedString(content))
             buffers[file] = WeakReference(buffer)
             return buffer
         }
