@@ -31,6 +31,7 @@ data class NoteCardState(
     val buffer: Buffer,
     val selection: TextRange = TextRange.Zero
 ) {
+    val title get() = buffer.title
     val textFieldValue get() = TextFieldValue(buffer.content.value, selection)
 
     fun update(textFieldValue: TextFieldValue): NoteCardState {

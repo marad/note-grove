@@ -30,7 +30,7 @@ class MainWindowController(
     val streamLazyListState = LazyListState()
     val shortcuts = prepareActionsAndShortcuts(this)
 
-    val currentNote = mutableStateOf(-1)
+    val selectedNoteIndex = mutableStateOf(-1)
 
     fun updateState(f: (MainWindowState) -> MainWindowState) {
         _state.update(f)
@@ -57,12 +57,21 @@ class MainWindowController(
         }
     }
 
+    fun getNote(name: NoteName): NoteCardState? =
+        state.value.noteStreamState.cards.find { it.title == name.name }
+
     fun currentNote(): NoteCardState? {
-        val index = currentNote.value
+        val index = selectedNoteIndex.value
         return if (index >= 0 && index < state.value.noteStreamState.cards.size) {
             state.value.noteStreamState.cards[index]
         } else {
             null
+        }
+    }
+
+    fun replaceNote(old: NoteCardState, new: NoteCardState) {
+        updateState { state ->
+            state.copy(noteStreamState = state.noteStreamState.replaceCard(old, new))
         }
     }
 
@@ -76,8 +85,7 @@ class MainWindowController(
         }
     }
 
-
-    fun saveNoteCard(card: NoteCardState) {
+    fun saveNote(card: NoteCardState) {
         val content = card.buffer.content.value.text
         val file = card.buffer.path
         val md = Markdown.parse(content)
@@ -97,5 +105,24 @@ class MainWindowController(
     fun deleteNote(card: NoteCardState) {
         closeNote(card)
         Files.delete(card.buffer.path)
+    }
+
+    fun reloadNoteFromDisk(name: NoteName) {
+        bufferManager.reloadBuffer(name)
+    }
+
+    fun renameNote(old: NoteName, new: NoteName) {
+        val oldCard = getNote(old)
+        if (oldCard != null) {
+            val updatedNotes = root.renameNote(old, new)
+            // FIXME: this should probably update buffer state in place
+            //        so that cards in other windows would update as well
+            val newCard = NoteCardState(bufferManager.openBuffer(root.pathToFile(new)) {
+                Templates.newNote(root, new.name, NoteName("templates.note"))
+            })
+            bufferManager.removeBuffer(oldCard.buffer.path)
+            replaceNote(oldCard, newCard)
+            updatedNotes.forEach { reloadNoteFromDisk(it) }
+        }
     }
 }

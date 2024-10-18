@@ -17,6 +17,10 @@ class Buffer(val title: String,
     fun updateContent(annotatedString: AnnotatedString) {
         _content.tryEmit(annotatedString)
     }
+
+    fun reload() {
+        _content.tryEmit(AnnotatedString(Files.readString(path)))
+    }
 }
 
 
@@ -33,6 +37,14 @@ class BufferManager {
             buffers[file] = WeakReference(buffer)
             return buffer
         }
+    }
+
+    fun reloadBuffer(noteName: NoteName) {
+        buffers.mapNotNull { it.value.get() }
+            .filter { it.title == noteName.name }
+            .forEach {
+                it.reload()
+            }
     }
 
     fun removeBuffer(file: Path) {

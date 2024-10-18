@@ -69,9 +69,9 @@ fun MainWindow(controller: MainWindowController,
                         lazyListState = controller.streamLazyListState,
                         modifier = Modifier.weight(1f),
                         onUpdate = { stream -> controller.updateState { state.copy(noteStreamState = stream) } },
-                        outlineNote = controller.currentNote.value,
+                        outlineNote = controller.selectedNoteIndex.value,
                         onItemFocused = { idx ->
-                            controller.currentNote.value = idx
+                            controller.selectedNoteIndex.value = idx
                         }
                     )
                 }

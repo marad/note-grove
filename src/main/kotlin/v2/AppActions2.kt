@@ -17,7 +17,7 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
     val closeCurrentNoteAction = createCloseCurrentNoteAction(mainWindowController)
     val newNoteAction = newNoteAction(mainWindowController)
     val deleteNoteAction = createDeleteAction(mainWindowController)
-//    val renameNoteAction = createRenameNoteAction(windowVm)
+    val renameNoteAction = createRenameNoteAction(mainWindowController)
 //    val selectRootAction = createSelectRootAction(windowVm)
 //    val cycleRootAction = createCycleRootAction(windowVm)
 //    val followLinkAction = createFollowLinkAction(windowVm)
@@ -34,8 +34,7 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
 //    val searchPhrase = createSearchPhraseAction(windowVm)
 
     appActions.addAll(listOf(
-        saveAction, newNoteAction, deleteNoteAction,
-        // renameNoteAction, selectRootAction,
+        saveAction, newNoteAction, deleteNoteAction, renameNoteAction, //selectRootAction,
 //        cycleRootAction, createRefactorHierarchyAction(windowVm), followLinkAction,
         closeCurrentNoteAction, showNoteSearchDialog, showActionSearchDialog,
 //        openDailyNote, previousDailyNote, nextDailyNote,
@@ -46,7 +45,7 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
 
     shortcuts.add(Shortcut(Key.S, KeyModifier.Ctrl), saveAction)
     shortcuts.add(Shortcut(Key.W, KeyModifier.Ctrl), closeCurrentNoteAction)
-//    shortcuts.add(Shortcut(Key.N, KeyModifier.Ctrl), newNoteAction)
+    shortcuts.add(Shortcut(Key.N, KeyModifier.Ctrl), newNoteAction)
 //    shortcuts.add(Shortcut(Key.R, KeyModifier.Ctrl, KeyModifier.Shift), selectRootAction)
 //    shortcuts.add(Shortcut(Key.R, KeyModifier.Ctrl), cycleRootAction)
 //    shortcuts.add(Shortcut(Key.G, KeyModifier.Ctrl), followLinkAction)
@@ -101,7 +100,7 @@ fun createCloseCurrentNoteAction(mainWindowController: MainWindowController): Ac
 fun createSaveAction(ctl: MainWindowController): Action =
     Action("Save", "Saves current file") {
         ctl.currentNote()?.let { card ->
-            ctl.saveNoteCard(card)
+            ctl.saveNote(card)
         }
     }
 
@@ -121,7 +120,7 @@ fun createDeleteAction(ctl: MainWindowController): Action =
     Action("Delete", "Deletes current file") {
         // get current note name
         val card = ctl.currentNote()
-        val question = card?.buffer?.title?.let {
+        val question = card?.title?.let {
             "Are you sure that you want to delete $it?"
         } ?: "Are you sure that you want to delete this note?"
 
@@ -136,19 +135,18 @@ fun createDeleteAction(ctl: MainWindowController): Action =
 
     }
 
-//fun createRenameNoteAction(appVm: NoteWindowViewModel): Action =
-//    Action("Rename", "Renames current file") {
-//        val activeTab = appVm.state.value.workspace.activeTab()
-//        if (activeTab != null) {
-//            val title = activeTab.title
-//            appVm.actionLauncherViewModel.showInput(initialQuery = title) { newTitle ->
-//                val oldName = NoteName(title)
-//                val newName = NoteName(newTitle)
-//                appVm.renameNote(oldName, newName)
-//            }
-//        }
-//    }
-//
+fun createRenameNoteAction(ctl: MainWindowController): Action =
+    Action("Rename", "Renames current file") {
+        val card = ctl.currentNote()
+        if (card != null) {
+            ctl.launcher.showInput(initialQuery = card.title) { newTitle ->
+                val oldName = NoteName(card.title)
+                val newName = NoteName(newTitle)
+                ctl.renameNote(oldName, newName)
+            }
+        }
+    }
+
 //fun createSelectRootAction(appVm: NoteWindowViewModel): Action =
 //    Action("Select root", "Shows dialog to switch active root") {
 //        val state = appVm.state.value

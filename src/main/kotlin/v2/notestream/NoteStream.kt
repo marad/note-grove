@@ -34,9 +34,17 @@ data class NoteStreamState(
     fun closeCard(card: NoteCardState): NoteStreamState =
         copy(cards = cards.filterNot { it == card })
 
-    fun prependCard(card: NoteCardState): NoteStreamState {
-        return copy(cards = listOf(card) + cards)
-    }
+    fun prependCard(card: NoteCardState): NoteStreamState =
+        copy(cards = listOf(card) + cards)
+
+    fun replaceCard(old: NoteCardState, new: NoteCardState) =
+        copy(cards = cards.map {
+            if (it == old) {
+                new
+            } else {
+                it
+            }
+        })
 }
 
 @Composable
