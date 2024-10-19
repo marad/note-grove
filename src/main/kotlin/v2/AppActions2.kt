@@ -5,6 +5,7 @@ import NoteName
 import Shortcut
 import Shortcuts
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.text.AnnotatedString
 import files.internal.MatchingStrategy
 import v2.window.MainWindowController
 import java.awt.Desktop
@@ -32,7 +33,7 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
     val openWeeklyNote = createOpenWeeklyNoteAction(mainWindowController)
     val previousWeeklyNote = createPreviousWeeklyNoteAction(mainWindowController)
     val nextWeeklyNote = createNextWeeklyNoteAction(mainWindowController)
-//    val insertTemplate = createInsertTemplateAction(windowVm)
+    val insertTemplate = createInsertTemplateAction(mainWindowController)
 //    val jumpToBacklink = createJumpToBacklinkAction(windowVm)
 //    val searchPhrase = createSearchPhraseAction(windowVm)
 
@@ -43,7 +44,7 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
         closeCurrentNoteAction, showNoteSearchDialog, showActionSearchDialog,
         openDailyNote, previousDailyNote, nextDailyNote,
         openWeeklyNote, previousWeeklyNote, nextWeeklyNote,
-//        insertTemplate, jumpToBacklink, searchPhrase
+        insertTemplate, //jumpToBacklink, searchPhrase
     ))
 
 
@@ -282,28 +283,32 @@ fun createNextWeeklyNoteAction(ctl: MainWindowController): Action =
     }
 
 
-//fun createInsertTemplateAction(appVm: NoteWindowViewModel): Action =
-//    Action("Insert template", "Inserts template at cursor position") {
-//
-//        // select template
-//        appVm.actionLauncherViewModel.show("", placeholder = "Select a template...") { query ->
-//            val root = appVm.state.value.root
-//            val templates = root.searchFiles("templates.", { entry, pattern -> entry.startsWith(pattern)} )
-//                .map { it.name.removePrefix("") }
-//
-//            templates.filter { it.contains(query, ignoreCase = true) }
-//                .map { template ->
-//                    Action(template) {
-//                        val activeTab = appVm.state.value.workspace.activeTab()
-//                        val editorViewModel = activeTab?.editorViewModel
-//                        val cursor = editorViewModel?.state?.value?.content?.selection?.start ?: 0
-//                        val templateContent = Templates.loadTemplate(root, NoteName(template))
-//                        editorViewModel?.insert(templateContent, cursor)
-//                    }
-//                }
-//        }
-//    }
-//
+fun createInsertTemplateAction(ctl: MainWindowController): Action =
+    Action("Insert template", "Inserts template at cursor position") {
+        // select template
+        ctl.launcher.show("", placeholder = "Select a template...") { query ->
+            val templates = ctl.root.searchFiles("templates.", { entry, pattern -> entry.startsWith(pattern)} )
+                .map { it.value.removePrefix("") }
+
+            templates.filter { it.contains(query, ignoreCase = true) }
+                .map { template ->
+                    Action(template) {
+                        val note = ctl.currentNote()
+                        if (note != null) {
+                            val cursor = note.selection.start
+                            val templateContent = Templates.loadTemplate(ctl.root, NoteName(template))
+                            val content = note.buffer.content.value.text
+                            val updatedContentBuilder = StringBuilder()
+                            updatedContentBuilder.append(content.substring(0, cursor))
+                            updatedContentBuilder.append(templateContent)
+                            updatedContentBuilder.append(content.substring(cursor))
+                            note.buffer.updateContent(AnnotatedString(updatedContentBuilder.toString()))
+                        }
+                    }
+                }
+        }
+    }
+
 //fun createJumpToBacklinkAction(appVm: NoteWindowViewModel): Action =
 //    Action("Jump to backlink", "Shows a list of backlinks to current note") {
 //        val matchingStrategy = MatchingStrategy::fuzzy
