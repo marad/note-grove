@@ -100,6 +100,15 @@ class MainWindowController(
         }
     }
 
+    /***
+     * Updates a note card based on the buffer note name
+     */
+    fun updateCard(card: NoteCardState) {
+        updateState { state ->
+            state.copy(noteStreamState = state.noteStreamState.updateCard(card))
+        }
+    }
+
     fun saveNote(card: NoteCardState) {
         val content = card.buffer.content.value.text
         val file = card.buffer.path

@@ -6,6 +6,7 @@ import Shortcut
 import Shortcuts
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextRange
 import files.internal.MatchingStrategy
 import v2.window.MainWindowController
 import java.awt.Desktop
@@ -302,7 +303,10 @@ fun createInsertTemplateAction(ctl: MainWindowController): Action =
                             updatedContentBuilder.append(content.substring(0, cursor))
                             updatedContentBuilder.append(templateContent)
                             updatedContentBuilder.append(content.substring(cursor))
+                            // update the content
                             note.buffer.updateContent(AnnotatedString(updatedContentBuilder.toString()))
+                            // move the cursor at the end
+                            ctl.updateCard(note.copy(selection = TextRange(note.selection.start+templateContent.length)))
                         }
                     }
                 }

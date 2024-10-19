@@ -24,9 +24,10 @@ data class NoteStreamState(
     val cards: List<NoteCardState> = emptyList(),
 ) {
     fun updateCard(index: Int, state: NoteCardState): NoteStreamState =
-        copy(
-            cards = cards.updated(index, state)
-        )
+        copy(cards = cards.updated(index, state))
+
+    fun updateCard(card: NoteCardState): NoteStreamState =
+        copy(cards = cards.map { if (it.buffer.name == card.buffer.name) card else it })
 
     fun closeCardAt(index: Int): NoteStreamState =
         copy(cards = cards.filterIndexed { idx, _ -> idx != index })
