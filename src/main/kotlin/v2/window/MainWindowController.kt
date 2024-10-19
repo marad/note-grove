@@ -55,12 +55,14 @@ class MainWindowController(
         val index = stream.cards.find { it.buffer.name == noteName }
             ?.let { stream.cards.indexOf(it) }
         if (index != null) {
+            selectedNoteIndex.value = index
             coScope.launch {
                 streamLazyListState.animateScrollToItem(index)
             }
         } else {
+            selectedNoteIndex.value = 0
             updateState {
-               it.copy(
+                it.copy(
                     noteStreamState = stream.prependCard(
                         NoteCardState(bufferManager.openBuffer(root, noteName) {
                             Templates.newNote(root, noteName.value, NoteName(templateName))
