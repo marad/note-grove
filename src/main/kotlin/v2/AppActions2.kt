@@ -29,9 +29,9 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
     val openDailyNote = createOpenDailyNoteAction(mainWindowController)
     val previousDailyNote = createPreviousDailyNoteAction(mainWindowController)
     val nextDailyNote = createNextDailyNoteAction(mainWindowController)
-//    val openWeeklyNote = createOpenWeeklyNoteAction(windowVm)
-//    val previousWeeklyNote = createPreviousWeeklyNoteAction(windowVm)
-//    val nextWeeklyNote = createNextWeeklyNoteAction(windowVm)
+    val openWeeklyNote = createOpenWeeklyNoteAction(mainWindowController)
+    val previousWeeklyNote = createPreviousWeeklyNoteAction(mainWindowController)
+    val nextWeeklyNote = createNextWeeklyNoteAction(mainWindowController)
 //    val insertTemplate = createInsertTemplateAction(windowVm)
 //    val jumpToBacklink = createJumpToBacklinkAction(windowVm)
 //    val searchPhrase = createSearchPhraseAction(windowVm)
@@ -42,7 +42,8 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
         createRefactorHierarchyAction(mainWindowController),
         closeCurrentNoteAction, showNoteSearchDialog, showActionSearchDialog,
         openDailyNote, previousDailyNote, nextDailyNote,
-//        openWeeklyNote, previousWeeklyNote, nextWeeklyNote, insertTemplate, jumpToBacklink, searchPhrase
+        openWeeklyNote, previousWeeklyNote, nextWeeklyNote,
+//        insertTemplate, jumpToBacklink, searchPhrase
     ))
 
 
@@ -247,44 +248,40 @@ fun createNextDailyNoteAction(ctl: MainWindowController): Action =
     }
 
 
-//fun createOpenWeeklyNoteAction(appVm: NoteWindowViewModel): Action =
-//    Action("Open weekly note") {
-//        appVm.openNote(Weekly.getCurrentWeeklyNote(), "templates.weekly")
-//    }
-//
-//fun createPreviousWeeklyNoteAction(appVm: NoteWindowViewModel): Action =
-//    Action("Open previous weekly note") {
-//        val root = appVm.state.value.root
-//        val activeTab = appVm.state.value.workspace.activeTab()
-//        val currentTitle = activeTab?.path?.nameWithoutExtension
-//        currentTitle?.let { Weekly.getWeekAndYear(it) }?.let {
-//            val (week, year) = it
-//            val previousNote = Weekly.getPreviousWeeklyNote(root, week, year)
-//            if (previousNote != null) {
-//                appVm.openNote(previousNote, "templates.weekly")
-//            }
-//        }
-//    }
-//
-//fun createNextWeeklyNoteAction(appVm: NoteWindowViewModel): Action =
-//    Action("Open next weekly note") {
-//        val root = appVm.state.value.root
-//        val activeTab = appVm.state.value.workspace.activeTab()
-//        val currentTitle = activeTab?.path?.nameWithoutExtension
-//        currentTitle?.let { Weekly.getWeekAndYear(it) }?.let {
-//            val (week, year) = it
-//            val nextNote = Weekly.getNextWeeklyNote(root, week, year)
-//            if (nextNote != null) {
-//                appVm.openNote(nextNote, "templates.weekly")
-//            } else {
-//                val nextWeekFirstDay = Weekly.getFirstDayOfWeek(week, year).plusWeeks(1)
-//                val noteName = Weekly.formatWeeklyNoteName(Weekly.getWeek(nextWeekFirstDay), nextWeekFirstDay.year)
-//                appVm.openNote(noteName, "templates.weekly")
-//            }
-//        }
-//    }
-//
-//
+fun createOpenWeeklyNoteAction(ctl: MainWindowController): Action =
+    Action("Open weekly note") {
+        ctl.openNote(Weekly.getCurrentWeeklyNote(), "templates.weekly")
+    }
+
+fun createPreviousWeeklyNoteAction(ctl: MainWindowController): Action =
+    Action("Open previous weekly note") {
+        val currentTitle = ctl.currentNote()?.title
+        currentTitle?.let { Weekly.getWeekAndYear(it) }?.let {
+            val (week, year) = it
+            val previousNote = Weekly.getPreviousWeeklyNote(ctl.root, week, year)
+            if (previousNote != null) {
+                ctl.openNote(previousNote, "templates.weekly")
+            }
+        }
+    }
+
+fun createNextWeeklyNoteAction(ctl: MainWindowController): Action =
+    Action("Open next weekly note") {
+        val currentTitle = ctl.currentNote()?.title
+        currentTitle?.let { Weekly.getWeekAndYear(it) }?.let {
+            val (week, year) = it
+            val nextNote = Weekly.getNextWeeklyNote(ctl.root, week, year)
+            if (nextNote != null) {
+                ctl.openNote(nextNote, "templates.weekly")
+            } else {
+                val nextWeekFirstDay = Weekly.getFirstDayOfWeek(week, year).plusWeeks(1)
+                val noteName = Weekly.formatWeeklyNoteName(Weekly.getWeek(nextWeekFirstDay), nextWeekFirstDay.year)
+                ctl.openNote(noteName, "templates.weekly")
+            }
+        }
+    }
+
+
 //fun createInsertTemplateAction(appVm: NoteWindowViewModel): Action =
 //    Action("Insert template", "Inserts template at cursor position") {
 //
