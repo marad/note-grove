@@ -9,6 +9,7 @@ import files.internal.MatchingStrategy
 import v2.window.MainWindowController
 import java.awt.Desktop
 import java.net.URI
+import java.time.LocalDate
 
 fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shortcuts {
     val shortcuts = Shortcuts()
@@ -25,9 +26,9 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
     val followLinkAction = createFollowLinkAction(mainWindowController)
     val showNoteSearchDialog = createSearchNoteAction(mainWindowController, appActions)
     val showActionSearchDialog = createSearchActionsAction(mainWindowController, appActions)
-//    val openDailyNote = createOpenDailyNoteAction(windowVm)
-//    val previousDailyNote = createPreviousDailyNoteAction(windowVm)
-//    val nextDailyNote = createNextDailyNoteAction(windowVm)
+    val openDailyNote = createOpenDailyNoteAction(mainWindowController)
+    val previousDailyNote = createPreviousDailyNoteAction(mainWindowController)
+    val nextDailyNote = createNextDailyNoteAction(mainWindowController)
 //    val openWeeklyNote = createOpenWeeklyNoteAction(windowVm)
 //    val previousWeeklyNote = createPreviousWeeklyNoteAction(windowVm)
 //    val nextWeeklyNote = createNextWeeklyNoteAction(windowVm)
@@ -40,9 +41,10 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
         cycleRootAction, followLinkAction,
         createRefactorHierarchyAction(mainWindowController),
         closeCurrentNoteAction, showNoteSearchDialog, showActionSearchDialog,
-//        openDailyNote, previousDailyNote, nextDailyNote,
+        openDailyNote, previousDailyNote, nextDailyNote,
 //        openWeeklyNote, previousWeeklyNote, nextWeeklyNote, insertTemplate, jumpToBacklink, searchPhrase
     ))
+
 
     appActions.sortBy { it.name }
 
@@ -54,9 +56,9 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
     shortcuts.add(Shortcut(Key.G, KeyModifier.Ctrl), followLinkAction)
     shortcuts.add(Shortcut(Key.P, KeyModifier.Ctrl), showNoteSearchDialog)
     shortcuts.add(Shortcut(Key.P, KeyModifier.Ctrl, KeyModifier.Shift), showActionSearchDialog)
-//    shortcuts.add(Shortcut(Key.D, KeyModifier.Ctrl), openDailyNote)
-//    shortcuts.add(Shortcut(Key.U, KeyModifier.Ctrl), previousDailyNote)
-//    shortcuts.add(Shortcut(Key.I, KeyModifier.Ctrl), nextDailyNote)
+    shortcuts.add(Shortcut(Key.D, KeyModifier.Ctrl), openDailyNote)
+    shortcuts.add(Shortcut(Key.U, KeyModifier.Ctrl), previousDailyNote)
+    shortcuts.add(Shortcut(Key.I, KeyModifier.Ctrl), nextDailyNote)
 //    shortcuts.add(Shortcut(Key.F, KeyModifier.Ctrl, KeyModifier.Shift), searchPhrase)
 
     return shortcuts
@@ -215,40 +217,36 @@ fun createRefactorHierarchyAction(ctl: MainWindowController): Action =
     }
 
 
-//fun createOpenDailyNoteAction(appVm: NoteWindowViewModel): Action =
-//    Action("Open daily journal note") {
-//        appVm.openNote(Journal.todaysDailyNote(), "templates.daily")
-//    }
-//
-//fun createPreviousDailyNoteAction(appVm: NoteWindowViewModel): Action =
-//    Action("Open previous daily journal note") {
-//        val root = appVm.state.value.root
-//        val activeTab = appVm.state.value.workspace.activeTab()
-//        val currentTitle = activeTab?.path?.nameWithoutExtension
-//        val date = currentTitle?.let(Journal::getJournalDate) ?: LocalDate.now()
-//        val previousNote = Journal.previousDailyNote(root, date)
-//        if (previousNote != null) {
-//            appVm.openNote(previousNote, "templates.daily")
-//        }
-//    }
-//
-//fun createNextDailyNoteAction(appVm: NoteWindowViewModel): Action =
-//    Action("Open next daily journal note") {
-//        val root = appVm.state.value.root
-//        val activeTab = appVm.state.value.workspace.activeTab()
-//        val currentTitle = activeTab?.path?.nameWithoutExtension
-//        val date = currentTitle?.let(Journal::getJournalDate) ?: LocalDate.now()
-//        val nextNote = Journal.nextDailyNote(root, date)
-//        if (nextNote != null) {
-//            appVm.openNote(nextNote, "templates.daily")
-//        } else {
-//            val nextDay = date.plusDays(1)
-//            val noteName = Journal.formatJournalNoteName(nextDay)
-//            appVm.openNote(noteName, "templates.daily")
-//        }
-//    }
-//
-//
+fun createOpenDailyNoteAction(ctl: MainWindowController): Action =
+    Action("Open daily journal note") {
+        ctl.openNote(Journal.todaysDailyNote(), "templates.daily")
+    }
+
+fun createPreviousDailyNoteAction(ctl: MainWindowController): Action =
+    Action("Open previous daily journal note") {
+        val currentTitle = ctl.currentNote()?.title
+        val date = currentTitle?.let(Journal::getJournalDate) ?: LocalDate.now()
+        val previousNote = Journal.previousDailyNote(ctl.root, date)
+        if (previousNote != null) {
+            ctl.openNote(previousNote, "templates.daily")
+        }
+    }
+
+fun createNextDailyNoteAction(ctl: MainWindowController): Action =
+    Action("Open next daily journal note") {
+        val currentTitle = ctl.currentNote()?.title
+        val date = currentTitle?.let(Journal::getJournalDate) ?: LocalDate.now()
+        val nextNote = Journal.nextDailyNote(ctl.root, date)
+        if (nextNote != null) {
+            ctl.openNote(nextNote, "templates.daily")
+        } else {
+            val nextDay = date.plusDays(1)
+            val noteName = Journal.formatJournalNoteName(nextDay)
+            ctl.openNote(noteName, "templates.daily")
+        }
+    }
+
+
 //fun createOpenWeeklyNoteAction(appVm: NoteWindowViewModel): Action =
 //    Action("Open weekly note") {
 //        appVm.openNote(Weekly.getCurrentWeeklyNote(), "templates.weekly")

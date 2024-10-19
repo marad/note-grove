@@ -51,7 +51,7 @@ class MainWindowController(
         updateState { it.cycleRoots() }
     }
 
-    fun openNote(noteName: NoteName) {
+    fun openNote(noteName: NoteName, templateName: String = "templates.note") {
         val index = stream.cards.find { it.buffer.name == noteName }
             ?.let { stream.cards.indexOf(it) }
         if (index != null) {
@@ -63,7 +63,7 @@ class MainWindowController(
                it.copy(
                     noteStreamState = stream.prependCard(
                         NoteCardState(bufferManager.openBuffer(root, noteName) {
-                            Templates.newNote(root, noteName.value, NoteName("templates.note"))
+                            Templates.newNote(root, noteName.value, NoteName(templateName))
                         })))
             }
             coScope.launch {
