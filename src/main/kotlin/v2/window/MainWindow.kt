@@ -1,26 +1,21 @@
 package v2.window
 
 import ActionLauncherDialog
-import NoteName
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Button
-import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.runtime.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import v2.notestream.NoteStream
 import v2.notestream.NoteStreamState
-import androidx.compose.runtime.*
-import androidx.compose.ui.unit.dp
 
 data class MainWindowState(
     val noteStreamState: NoteStreamState = NoteStreamState(),
@@ -56,16 +51,6 @@ fun MainWindow(controller: MainWindowController,
                 Column(
                     Modifier.padding(10.dp)
                 ) {
-                    Button(
-                        onClick = {
-                            controller.launcher.showInput {
-                                controller.openNote(NoteName(it))
-                            }
-                        }
-                    ) {
-                        Icon(Icons.Default.Add, "")
-                    }
-
                     NoteStream(
                         state.noteStreamState,
                         lazyListState = controller.streamLazyListState,
