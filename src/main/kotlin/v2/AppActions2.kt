@@ -8,15 +8,17 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextRange
 import files.internal.MatchingStrategy
+import tools.rg.Match
 import v2.window.MainWindowController
 import java.awt.Desktop
 import java.net.URI
+import java.nio.file.Path
 import java.time.LocalDate
+import kotlin.io.path.nameWithoutExtension
 
 fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shortcuts {
     val shortcuts = Shortcuts()
     val appActions = mutableListOf<Action>()
-
 
     val saveAction = createSaveAction(mainWindowController)
     val closeCurrentNoteAction = createCloseCurrentNoteAction(mainWindowController)
@@ -35,8 +37,8 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
     val previousWeeklyNote = createPreviousWeeklyNoteAction(mainWindowController)
     val nextWeeklyNote = createNextWeeklyNoteAction(mainWindowController)
     val insertTemplate = createInsertTemplateAction(mainWindowController)
-//    val jumpToBacklink = createJumpToBacklinkAction(windowVm)
-//    val searchPhrase = createSearchPhraseAction(windowVm)
+    val jumpToBacklink = createJumpToBacklinkAction(mainWindowController)
+    val searchPhrase = createSearchPhraseAction(mainWindowController)
 
     appActions.addAll(listOf(
         saveAction, newNoteAction, deleteNoteAction, renameNoteAction, selectRootAction,
@@ -45,7 +47,7 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
         closeCurrentNoteAction, showNoteSearchDialog, showActionSearchDialog,
         openDailyNote, previousDailyNote, nextDailyNote,
         openWeeklyNote, previousWeeklyNote, nextWeeklyNote,
-        insertTemplate, //jumpToBacklink, searchPhrase
+        insertTemplate, jumpToBacklink, searchPhrase
     ))
 
 
@@ -62,7 +64,7 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
     shortcuts.add(Shortcut(Key.D, KeyModifier.Ctrl), openDailyNote)
     shortcuts.add(Shortcut(Key.U, KeyModifier.Ctrl), previousDailyNote)
     shortcuts.add(Shortcut(Key.I, KeyModifier.Ctrl), nextDailyNote)
-//    shortcuts.add(Shortcut(Key.F, KeyModifier.Ctrl, KeyModifier.Shift), searchPhrase)
+    shortcuts.add(Shortcut(Key.F, KeyModifier.Ctrl, KeyModifier.Shift), searchPhrase)
 
     return shortcuts
 }
@@ -313,43 +315,42 @@ fun createInsertTemplateAction(ctl: MainWindowController): Action =
         }
     }
 
-//fun createJumpToBacklinkAction(appVm: NoteWindowViewModel): Action =
-//    Action("Jump to backlink", "Shows a list of backlinks to current note") {
-//        val matchingStrategy = MatchingStrategy::fuzzy
-//        val activeTab = appVm.state.value.workspace.activeTab()
-//        val noteName = activeTab?.title
-//        if (noteName != null) {
-//            val root = appVm.state.value.root
-//            val backlinks = root.searchBacklinks(NoteName(noteName)).filterIsInstance<Match>()
-//            appVm.actionLauncherViewModel.show("") { pattern ->
-//                backlinks
-//                    .filter { matchingStrategy(it.path, pattern) }
-//                    .groupBy { it.path }
-//                    .map { (_, backlinks) ->
-//                        val path = Path.of(backlinks.first().path)
-//                        val title = path.nameWithoutExtension
-//                        val description = backlinks.fold(StringBuilder()) { acc, entry ->
-//                            acc.appendLine(entry.lines.trim())
-//                        }.toString().trim()
-//                        Action(title, description) {
-//                            appVm.openNote(root.getNoteName(path))
-//                        }
-//                    }
-//            }
-//        }
-//    }
-//
-//
-//fun createSearchPhraseAction(appVm: NoteWindowViewModel): Action =
-//    Action("Search phrase", "Searches for a phrase in all notes") {
-//        val root = appVm.state.value.root
-//        appVm.actionLauncherViewModel.show(placeholder = "Enter a phrase...") { phrase ->
-//            val entries = root.searchInFiles(phrase).filterIsInstance<Match>()
-//            entries.map { entry ->
-//                val path = Path.of(entry.path)
-//                Action(path.nameWithoutExtension, entry.lines.trim()) {
-//                    appVm.openNote(NoteName(path.nameWithoutExtension))
-//                }
-//            }
-//        }
-//    }
+fun createJumpToBacklinkAction(ctl: MainWindowController): Action =
+    Action("Jump to backlink", "Shows a list of backlinks to current note") {
+        val matchingStrategy = MatchingStrategy::fuzzy
+        val note = ctl.currentNote()
+        if (note != null) {
+            val root = note.buffer.root
+            val backlinks = root.searchBacklinks(note.buffer.name).filterIsInstance<Match>()
+            ctl.launcher.show("") { pattern ->
+                backlinks
+                    .filter { matchingStrategy(it.path, pattern) }
+                    .groupBy { it.path }
+                    .map { (_, backlinks) ->
+                        val path = Path.of(backlinks.first().path)
+                        val title = path.nameWithoutExtension
+                        val description = backlinks.fold(StringBuilder()) { acc, entry ->
+                            acc.appendLine(entry.lines.trim())
+                        }.toString().trim()
+                        Action(title, description) {
+                            ctl.openNote(root.getNoteName(path))
+                        }
+                    }
+            }
+        }
+    }
+
+
+fun createSearchPhraseAction(ctl: MainWindowController): Action =
+    Action("Search phrase", "Searches for a phrase in all notes") {
+        val root = ctl.root
+        ctl.launcher.show(placeholder = "Enter a phrase...") { phrase ->
+            val entries = root.searchInFiles(phrase).filterIsInstance<Match>()
+            entries.map { entry ->
+                val path = Path.of(entry.path)
+                Action(path.nameWithoutExtension, entry.lines.trim()) {
+                    ctl.openNote(NoteName(path.nameWithoutExtension))
+                }
+            }
+        }
+    }
