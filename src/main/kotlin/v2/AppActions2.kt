@@ -7,6 +7,8 @@ import Shortcuts
 import androidx.compose.ui.input.key.Key
 import files.internal.MatchingStrategy
 import v2.window.MainWindowController
+import java.awt.Desktop
+import java.net.URI
 
 fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shortcuts {
     val shortcuts = Shortcuts()
@@ -20,7 +22,7 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
     val renameNoteAction = createRenameNoteAction(mainWindowController)
     val selectRootAction = createSelectRootAction(mainWindowController)
     val cycleRootAction = createCycleRootAction(mainWindowController)
-//    val followLinkAction = createFollowLinkAction(windowVm)
+    val followLinkAction = createFollowLinkAction(mainWindowController)
     val showNoteSearchDialog = createSearchNoteAction(mainWindowController, appActions)
     val showActionSearchDialog = createSearchActionsAction(mainWindowController, appActions)
 //    val openDailyNote = createOpenDailyNoteAction(windowVm)
@@ -35,8 +37,8 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
 
     appActions.addAll(listOf(
         saveAction, newNoteAction, deleteNoteAction, renameNoteAction, selectRootAction,
-        cycleRootAction,
-//        createRefactorHierarchyAction(windowVm), followLinkAction,
+        cycleRootAction, followLinkAction,
+//        createRefactorHierarchyAction(windowVm),
         closeCurrentNoteAction, showNoteSearchDialog, showActionSearchDialog,
 //        openDailyNote, previousDailyNote, nextDailyNote,
 //        openWeeklyNote, previousWeeklyNote, nextWeeklyNote, insertTemplate, jumpToBacklink, searchPhrase
@@ -49,7 +51,7 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
     shortcuts.add(Shortcut(Key.N, KeyModifier.Ctrl), newNoteAction)
     shortcuts.add(Shortcut(Key.R, KeyModifier.Ctrl, KeyModifier.Shift), selectRootAction)
     shortcuts.add(Shortcut(Key.R, KeyModifier.Ctrl), cycleRootAction)
-//    shortcuts.add(Shortcut(Key.G, KeyModifier.Ctrl), followLinkAction)
+    shortcuts.add(Shortcut(Key.G, KeyModifier.Ctrl), followLinkAction)
     shortcuts.add(Shortcut(Key.P, KeyModifier.Ctrl), showNoteSearchDialog)
     shortcuts.add(Shortcut(Key.P, KeyModifier.Ctrl, KeyModifier.Shift), showActionSearchDialog)
 //    shortcuts.add(Shortcut(Key.D, KeyModifier.Ctrl), openDailyNote)
@@ -166,6 +168,28 @@ fun createCycleRootAction(ctl: MainWindowController): Action =
         ctl.cycleRoots()
     }
 
+fun createFollowLinkAction(ctl: MainWindowController): Action {
+    return Action("Follow link", "Follows link under cursor") {
+        val card = ctl.currentNote()
+        val buffer = card?.buffer
+        val content = buffer?.content?.value?.text ?: ""
+        val cursor = card?.selection?.start ?: 0
+
+        val link = Markdown.findLink(content, cursor)
+        if (link != null) {
+            if (link.startsWith("http")) {
+                if (Desktop.isDesktopSupported()) {
+                    Desktop.getDesktop().browse(URI(link))
+                }
+            } else {
+                val noteName = NoteName(link)
+                ctl.openNote(noteName)
+            }
+        }
+    }
+}
+
+
 //fun createRefactorHierarchyAction(appVm: NoteWindowViewModel): Action =
 //    Action("Refactor hierarchy", "Changes name for multiple files at once") {
 //        val tabState = appVm.state.value.workspace.activeTab()
@@ -189,27 +213,6 @@ fun createCycleRootAction(ctl: MainWindowController): Action =
 //        }
 //    }
 //
-//
-//fun createFollowLinkAction(appVm: NoteWindowViewModel): Action {
-//    return Action("Follow link", "Follows link under cursor") {
-//        val activeTab = appVm.state.value.workspace.activeTab()
-//        val editorViewModel = activeTab?.editorViewModel
-//        val content = editorViewModel?.content?.text ?: ""
-//        val cursor = editorViewModel?.state?.value?.content?.selection?.start ?: 0
-//
-//        val link = Markdown.findLink(content, cursor)
-//        if (link != null) {
-//            if (link.startsWith("http")) {
-//                if (Desktop.isDesktopSupported()) {
-//                    Desktop.getDesktop().browse(URI(link))
-//                }
-//            } else {
-//                val noteName = NoteName(link)
-//                appVm.openNote(noteName)
-//            }
-//        }
-//    }
-//}
 //
 //fun createOpenDailyNoteAction(appVm: NoteWindowViewModel): Action =
 //    Action("Open daily journal note") {
