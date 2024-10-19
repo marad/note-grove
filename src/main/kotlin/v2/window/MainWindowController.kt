@@ -141,4 +141,11 @@ class MainWindowController(
             updatedNotes.forEach { reloadNoteFromDisk(it) }
         }
     }
+
+    fun refactorHierarchy(srcPattern: String, dstPattern: String, files: List<NoteName>) {
+        files.forEach {
+            val newName = NoteName(it.value.replace(srcPattern, dstPattern))
+            renameNote(it, newName)
+        }
+    }
 }

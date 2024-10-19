@@ -38,7 +38,7 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
     appActions.addAll(listOf(
         saveAction, newNoteAction, deleteNoteAction, renameNoteAction, selectRootAction,
         cycleRootAction, followLinkAction,
-//        createRefactorHierarchyAction(windowVm),
+        createRefactorHierarchyAction(mainWindowController),
         closeCurrentNoteAction, showNoteSearchDialog, showActionSearchDialog,
 //        openDailyNote, previousDailyNote, nextDailyNote,
 //        openWeeklyNote, previousWeeklyNote, nextWeeklyNote, insertTemplate, jumpToBacklink, searchPhrase
@@ -190,30 +190,31 @@ fun createFollowLinkAction(ctl: MainWindowController): Action {
 }
 
 
-//fun createRefactorHierarchyAction(appVm: NoteWindowViewModel): Action =
-//    Action("Refactor hierarchy", "Changes name for multiple files at once") {
-//        val tabState = appVm.state.value.workspace.activeTab()
-//        val name = tabState?.title ?: ""
-//        val root = appVm.state.value.root
-//        // show input dialog to get the source pattern
-//        appVm.actionLauncherViewModel.show(initialQuery = name) { srcPattern ->
-//            val files = root.searchFiles(srcPattern, MatchingStrategy::contains)
-//            files.map { file ->
-//                Action(file.name) {
-//                    // show input dialog to get the destination pattern
-//                    appVm.actionLauncherViewModel.show { dstPattern ->
-//                        files.map {
-//                            Action("${it.name} > ${it.name.replace(srcPattern, dstPattern)}") {
-//                                appVm.refactorHierarchy(srcPattern, dstPattern, files)
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
-//
-//
+fun createRefactorHierarchyAction(ctl: MainWindowController): Action =
+    Action("Refactor hierarchy", "Changes name for multiple files at once") {
+        val buffer = ctl.currentNote()?.buffer
+        val name = buffer?.name?.value ?: ""
+        val root = buffer?.root ?: ctl.root
+
+        // show input dialog to get the source pattern
+        ctl.launcher.show(initialQuery = name) { srcPattern ->
+            val files = root.searchFiles(srcPattern, MatchingStrategy::contains)
+            files.map { file ->
+                Action(file.value) {
+                    // show input dialog to get the destination pattern
+                    ctl.launcher.show { dstPattern ->
+                        files.map {
+                            Action("${it.value} > ${it.value.replace(srcPattern, dstPattern)}") {
+                                ctl.refactorHierarchy(srcPattern, dstPattern, files)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
 //fun createOpenDailyNoteAction(appVm: NoteWindowViewModel): Action =
 //    Action("Open daily journal note") {
 //        appVm.openNote(Journal.todaysDailyNote(), "templates.daily")
