@@ -36,6 +36,21 @@ class MainWindowController(
         _state.update(f)
     }
 
+    fun selectRoot(root: Root) {
+        updateState { state ->
+            val index = state.roots.indexOfFirst { it == root }
+            if (index != -1) {
+                state.copy(activeRoot = index)
+            } else {
+                state
+            }
+        }
+    }
+
+    fun cycleRoots() {
+        updateState { it.cycleRoots() }
+    }
+
     fun openNote(noteName: NoteName) {
         val index = stream.cards.find { it.buffer.name == noteName }
             ?.let { stream.cards.indexOf(it) }

@@ -18,8 +18,8 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
     val newNoteAction = newNoteAction(mainWindowController)
     val deleteNoteAction = createDeleteAction(mainWindowController)
     val renameNoteAction = createRenameNoteAction(mainWindowController)
-//    val selectRootAction = createSelectRootAction(windowVm)
-//    val cycleRootAction = createCycleRootAction(windowVm)
+    val selectRootAction = createSelectRootAction(mainWindowController)
+    val cycleRootAction = createCycleRootAction(mainWindowController)
 //    val followLinkAction = createFollowLinkAction(windowVm)
     val showNoteSearchDialog = createSearchNoteAction(mainWindowController, appActions)
     val showActionSearchDialog = createSearchActionsAction(mainWindowController, appActions)
@@ -34,8 +34,9 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
 //    val searchPhrase = createSearchPhraseAction(windowVm)
 
     appActions.addAll(listOf(
-        saveAction, newNoteAction, deleteNoteAction, renameNoteAction, //selectRootAction,
-//        cycleRootAction, createRefactorHierarchyAction(windowVm), followLinkAction,
+        saveAction, newNoteAction, deleteNoteAction, renameNoteAction, selectRootAction,
+        cycleRootAction,
+//        createRefactorHierarchyAction(windowVm), followLinkAction,
         closeCurrentNoteAction, showNoteSearchDialog, showActionSearchDialog,
 //        openDailyNote, previousDailyNote, nextDailyNote,
 //        openWeeklyNote, previousWeeklyNote, nextWeeklyNote, insertTemplate, jumpToBacklink, searchPhrase
@@ -46,8 +47,8 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
     shortcuts.add(Shortcut(Key.S, KeyModifier.Ctrl), saveAction)
     shortcuts.add(Shortcut(Key.W, KeyModifier.Ctrl), closeCurrentNoteAction)
     shortcuts.add(Shortcut(Key.N, KeyModifier.Ctrl), newNoteAction)
-//    shortcuts.add(Shortcut(Key.R, KeyModifier.Ctrl, KeyModifier.Shift), selectRootAction)
-//    shortcuts.add(Shortcut(Key.R, KeyModifier.Ctrl), cycleRootAction)
+    shortcuts.add(Shortcut(Key.R, KeyModifier.Ctrl, KeyModifier.Shift), selectRootAction)
+    shortcuts.add(Shortcut(Key.R, KeyModifier.Ctrl), cycleRootAction)
 //    shortcuts.add(Shortcut(Key.G, KeyModifier.Ctrl), followLinkAction)
     shortcuts.add(Shortcut(Key.P, KeyModifier.Ctrl), showNoteSearchDialog)
     shortcuts.add(Shortcut(Key.P, KeyModifier.Ctrl, KeyModifier.Shift), showActionSearchDialog)
@@ -147,25 +148,24 @@ fun createRenameNoteAction(ctl: MainWindowController): Action =
         }
     }
 
-//fun createSelectRootAction(appVm: NoteWindowViewModel): Action =
-//    Action("Select root", "Shows dialog to switch active root") {
-//        val state = appVm.state.value
-//        appVm.actionLauncherViewModel.show("") { query ->
-//            val roots = state.roots
-//            roots.filter { it.name.contains(query, ignoreCase = true) }
-//                .map { rootInfo ->
-//                    Action(rootInfo.name, "Switch to ${rootInfo.name}") {
-//                        appVm.selectRoot(rootInfo.root)
-//                    }
-//                }
-//        }
-//    }
-//
-//fun createCycleRootAction(appVm: NoteWindowViewModel): Action =
-//    Action("Cycle roots", "Cycles through all opened roots") {
-//        appVm.cycleRoots()
-//    }
-//
+fun createSelectRootAction(ctl: MainWindowController): Action =
+    Action("Select root", "Shows dialog to switch active root") {
+        val roots = ctl.state.value.roots
+        ctl.launcher.show("") { query ->
+            roots.filter { it.name.contains(query, ignoreCase = true) }
+                .map { root ->
+                    Action(root.name, "Switch to ${root.name}") {
+                        ctl.selectRoot(root)
+                    }
+                }
+        }
+    }
+
+fun createCycleRootAction(ctl: MainWindowController): Action =
+    Action("Cycle roots", "Cycles through all opened roots") {
+        ctl.cycleRoots()
+    }
+
 //fun createRefactorHierarchyAction(appVm: NoteWindowViewModel): Action =
 //    Action("Refactor hierarchy", "Changes name for multiple files at once") {
 //        val tabState = appVm.state.value.workspace.activeTab()

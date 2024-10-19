@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 data class MainWindowState(
     val noteStreamState: NoteStreamState = NoteStreamState(),
     val windowState: WindowState = WindowState(),
-    private val roots: List<Root>,
+    val roots: List<Root>,
     private val activeRoot: Int = 0,
 ) {
     init {
@@ -33,6 +33,8 @@ data class MainWindowState(
     }
 
     val root get() = roots[activeRoot]
+    fun cycleRoots() =
+            copy(activeRoot = (activeRoot+1)%roots.size)
 }
 
 @Composable
