@@ -19,5 +19,6 @@ data class AppConfig(
 
 data class RootConfig(
     val name: String,
-    val path: String
+    val path: String,
+    val color: String?,
 )

@@ -1,3 +1,4 @@
+import androidx.compose.ui.graphics.Color
 import files.FilesFacade
 import files.internal.MatchingStrategy
 import tools.rg.Begin
@@ -12,7 +13,7 @@ import kotlin.io.path.nameWithoutExtension
 
 fun main() {
     val path = "/home/marad/dendron/notes/"
-    val root = Root("test", path)
+    val root = Root("test", path, Color.Gray)
 
 //    vault.searchFiles("gcp").forEach(::println)
 //    vault.search("sql").forEach(::println)
@@ -26,7 +27,7 @@ value class NoteName(val value: String) {
     override fun toString(): String = value
 }
 
-class Root(val name: String, private val path: String) {
+class Root(val name: String, private val path: String, val color: Color) {
     private val files = FilesFacade.create()
     private val rg = RgFacade.create()
     private val sed = SedFacade.create()

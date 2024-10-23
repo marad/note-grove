@@ -69,6 +69,20 @@ fun NoteCard(state: NoteCardState,
                 Text(
                     state.buffer.name.value,
                     style = MaterialTheme.typography.h6)
+                Spacer(Modifier.width(10.dp))
+
+                Surface(
+                    color = state.buffer.root.color,
+                    modifier = Modifier.clip(RoundedCornerShape(5.dp))
+                    ) {
+                    Text(
+                        state.buffer.root.name,
+                        modifier = Modifier.padding(5.dp),
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.caption,
+                    )
+                }
                 Spacer(Modifier.weight(1f))
                 Icon(
                     Icons.Default.Close, "Close the note",

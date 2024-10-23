@@ -1,4 +1,5 @@
 import androidx.compose.runtime.*
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.window.application
 import config.AppConfig
 import v2.BufferManager
@@ -21,7 +22,9 @@ fun main() = application {
             exitProcess(1)
         }
         val roots = config.roots.map {
-            Root(it.name, it.path)
+            val colorValue = it.color?.trim('#')?.toLong(radix = 16)
+            val color = colorValue?.let { Color(it) } ?: Color.Gray
+            Root(it.name, it.path, color)
         }
         MainWindowController(bufferManager, roots, coScope, LauncherViewModel())
     }
