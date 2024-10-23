@@ -1,5 +1,6 @@
 package v2.notestream
 
+import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Arrangement
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
@@ -64,77 +66,79 @@ fun NoteStream(state: NoteStreamState,
     val coroutineScope = rememberCoroutineScope()
 
     if (state.cards.isNotEmpty()) {
-        LazyColumn(
-            modifier,
-            state = lazyListState,
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            itemsIndexed(state.cards) { idx, card ->
-                var textLayout: TextLayoutResult? by remember { mutableStateOf(null) }
-                var textFieldPosition by remember { mutableStateOf(0f) }
+        Box(modifier) {
+            LazyColumn(
+//                modifier,
+                state = lazyListState,
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                itemsIndexed(state.cards) { idx, card ->
+                    var textLayout: TextLayoutResult? by remember { mutableStateOf(null) }
+                    var textFieldPosition by remember { mutableStateOf(0f) }
 
-                fun scrollIfCursorOutOfView(cursorOffset: Int) {
-                    val item = lazyListState.layoutInfo.visibleItemsInfo.find { it.index == idx }
-                    val layout = textLayout
-                    if (layout != null && item != null && !lazyListState.isScrollInProgress) {
-                        val cursor = runCatching { layout.getCursorRect(cursorOffset) }
-                            .getOrElse { layout.getCursorRect(state.cards[idx].selection.start) }
-                        // I'm subtracting/adding cursor.height * 2 to make some space around the cursor after scroll
-                        val cursorTop = (cursor.top + item.offset + textFieldPosition - cursor.height*2)
-                        val cursorBottom = (cursor.bottom + item.offset + textFieldPosition + cursor.height*2)
+                    fun scrollIfCursorOutOfView(cursorOffset: Int) {
+                        val item = lazyListState.layoutInfo.visibleItemsInfo.find { it.index == idx }
+                        val layout = textLayout
+                        if (layout != null && item != null && !lazyListState.isScrollInProgress) {
+                            val cursor = runCatching { layout.getCursorRect(cursorOffset) }
+                                .getOrElse { layout.getCursorRect(state.cards[idx].selection.start) }
+                            // I'm subtracting/adding cursor.height * 2 to make some space around the cursor after scroll
+                            val cursorTop = (cursor.top + item.offset + textFieldPosition - cursor.height * 2)
+                            val cursorBottom = (cursor.bottom + item.offset + textFieldPosition + cursor.height * 2)
 
-                        val cursorDistanceFromViewportStart =
-                            lazyListState.layoutInfo.viewportStartOffset - cursorTop
-                        val cursorDistanceFromViewportEnd =
-                            lazyListState.layoutInfo.viewportEndOffset - cursorBottom
+                            val cursorDistanceFromViewportStart =
+                                lazyListState.layoutInfo.viewportStartOffset - cursorTop
+                            val cursorDistanceFromViewportEnd =
+                                lazyListState.layoutInfo.viewportEndOffset - cursorBottom
 
-                        var scrollOffset = 0f
-                        if (cursorDistanceFromViewportStart > 0) {
-                            // should scoll up
-                            println("scrolling up by $cursorDistanceFromViewportStart")
-                            scrollOffset = -cursorDistanceFromViewportStart
-                        } else if (cursorDistanceFromViewportEnd < 0) {
-                            // should scroll down
-                            println("scrolling down by $cursorDistanceFromViewportEnd")
-                            scrollOffset = -cursorDistanceFromViewportEnd
-                        } else {
-                            scrollOffset = 0f
-                        }
-                        coroutineScope.launch {
-                            lazyListState.animateScrollBy(scrollOffset)
+                            var scrollOffset = 0f
+                            if (cursorDistanceFromViewportStart > 0) {
+                                // should scoll up
+                                scrollOffset = -cursorDistanceFromViewportStart
+                            } else if (cursorDistanceFromViewportEnd < 0) {
+                                // should scroll down
+                                scrollOffset = -cursorDistanceFromViewportEnd
+                            } else {
+                                scrollOffset = 0f
+                            }
+                            coroutineScope.launch {
+                                lazyListState.animateScrollBy(scrollOffset)
+                            }
                         }
                     }
+
+                    NoteCard(card,
+                        active = outlineNote == idx,
+                        onChange = {
+                            val position = it.selection.start.coerceAtMost(state.cards[idx].textFieldValue.text.length)
+                            onUpdate(state.updateCard(idx, it))
+                            scrollIfCursorOutOfView(position)
+                        },
+                        onClose = { onUpdate(state.closeCardAt(idx)) },
+                        modifier = Modifier.onFocusChanged {
+                            if (it.hasFocus) {
+                                onItemFocused(idx)
+                            }
+                        }.let {
+                            if (outlineNote == idx) {
+                                it.shadow(5.dp)
+                                    .border(1.dp, Color.Gray, RoundedCornerShape(5.dp))
+                            } else {
+                                it
+                            }
+                        },
+                        textFieldModifier = Modifier.onGloballyPositioned {
+                            textFieldPosition = it.positionInParent().y
+                        },
+                        onTextLayout = { layout ->
+                            textLayout = layout
+                            scrollIfCursorOutOfView(state.cards[idx].selection.start)
+                        }
+                    )
+
                 }
-
-                NoteCard(card,
-                    active = outlineNote == idx,
-                    onChange = {
-                        val position = it.selection.start.coerceAtMost(state.cards[idx].textFieldValue.text.length)
-                        onUpdate(state.updateCard(idx, it))
-                        scrollIfCursorOutOfView(position)
-                    },
-                    onClose = { onUpdate(state.closeCardAt(idx)) },
-                    modifier = Modifier.onFocusChanged {
-                        if (it.hasFocus) {
-                            onItemFocused(idx)
-                        }
-                    }.let {
-                        if (outlineNote == idx) {
-                            it.shadow(5.dp)
-                                .border(1.dp, Color.Gray, RoundedCornerShape(5.dp))
-                        } else {
-                            it
-                        }
-                    },
-                    textFieldModifier = Modifier.onGloballyPositioned {
-                        textFieldPosition = it.positionInParent().y
-                    },
-                    onTextLayout = { layout ->
-                        textLayout = layout
-                        scrollIfCursorOutOfView(state.cards[idx].selection.start)
-                    }
-                )
             }
+            VerticalScrollbar(adapter = rememberScrollbarAdapter(lazyListState), Modifier.align(Alignment.CenterEnd))
         }
     } else {
         Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
