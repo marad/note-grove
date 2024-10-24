@@ -60,13 +60,13 @@ class MainWindowController(
                 streamLazyListState.animateScrollToItem(index)
             }
         } else {
-            selectedNoteIndex.value = 0
+            selectedNoteIndex.value += 1
             updateState {
                 it.copy(
-                    noteStreamState = stream.prependCard(
+                    noteStreamState = stream.insert(
                         NoteCardState(bufferManager.openBuffer(root, noteName) {
                             Templates.newNote(root, noteName.value, NoteName(templateName))
-                        })))
+                        }), selectedNoteIndex.value))
             }
             coScope.launch {
                 streamLazyListState.animateScrollToItem(0)
