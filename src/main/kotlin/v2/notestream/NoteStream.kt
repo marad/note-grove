@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -45,6 +46,9 @@ data class NoteStreamState(
     fun prependCard(card: NoteCardState): NoteStreamState =
         copy(cards = listOf(card) + cards)
 
+    fun insert(card: NoteCardState, atIndex: Int): NoteStreamState =
+        copy(cards = cards.take(atIndex) + listOf(card) + cards.drop(atIndex))
+
     fun replaceCard(old: NoteCardState, new: NoteCardState) =
         copy(cards = cards.map {
             if (it == old) {
@@ -66,9 +70,10 @@ fun NoteStream(state: NoteStreamState,
     val coroutineScope = rememberCoroutineScope()
 
     if (state.cards.isNotEmpty()) {
-        Box(modifier) {
+        Row(modifier) {
             LazyColumn(
 //                modifier,
+                Modifier.weight(1f),
                 state = lazyListState,
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
@@ -138,7 +143,7 @@ fun NoteStream(state: NoteStreamState,
 
                 }
             }
-            VerticalScrollbar(adapter = rememberScrollbarAdapter(lazyListState), Modifier.align(Alignment.CenterEnd))
+            VerticalScrollbar(adapter = rememberScrollbarAdapter(lazyListState))
         }
     } else {
         Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
