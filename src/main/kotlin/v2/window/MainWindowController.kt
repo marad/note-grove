@@ -34,6 +34,9 @@ class MainWindowController(
 
     fun selectNote(index: Int) {
         selectedNoteIndex.value = index
+        coScope.launch {
+            streamLazyListState.animateScrollToItem(index)
+        }
     }
 
     fun selectNextNote() {
@@ -68,9 +71,6 @@ class MainWindowController(
             ?.let { stream.cards.indexOf(it) }
         if (index != null) {
             selectNote(index)
-            coScope.launch {
-                streamLazyListState.animateScrollToItem(index)
-            }
         } else {
             selectNextNote()
             updateState {
@@ -79,9 +79,6 @@ class MainWindowController(
                         NoteCardState(bufferManager.openBuffer(root, noteName) {
                             Templates.newNote(root, noteName.value, NoteName(templateName))
                         }), selectedNoteIndex.value))
-            }
-            coScope.launch {
-                streamLazyListState.animateScrollToItem(selectedNoteIndex.value)
             }
         }
     }

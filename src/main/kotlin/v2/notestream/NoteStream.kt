@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,6 +19,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -76,7 +78,8 @@ fun NoteStream(state: NoteStreamState,
 //                modifier,
                 Modifier.weight(1f),
                 state = lazyListState,
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                contentPadding = PaddingValues(10.dp),
             ) {
                 itemsIndexed(state.cards) { idx, card ->
                     var textLayout: TextLayoutResult? by remember { mutableStateOf(null) }
@@ -128,10 +131,10 @@ fun NoteStream(state: NoteStreamState,
                                 }
                             }.let {
                                 if (outlineNote == idx) {
-                                    it//.shadow(1.dp, shape = RoundedCornerShape(5.dp))
+                                    it.shadow(5.dp, shape = RoundedCornerShape(5.dp))
                                         .border(1.dp, Color.Gray, RoundedCornerShape(5.dp))
                                 } else {
-                                    it
+                                    it.shadow(0.dp, shape = RoundedCornerShape(5.dp))
                                 }
                             },
                         textFieldModifier = Modifier.onGloballyPositioned {
