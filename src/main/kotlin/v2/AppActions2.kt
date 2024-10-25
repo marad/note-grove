@@ -1,6 +1,8 @@
 package v2
 
 import Action
+import KeyModifier.Ctrl
+import KeyModifier.Shift
 import NoteName
 import Shortcut
 import Shortcuts
@@ -47,24 +49,26 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
         closeCurrentNoteAction, showNoteSearchDialog, showActionSearchDialog,
         openDailyNote, previousDailyNote, nextDailyNote,
         openWeeklyNote, previousWeeklyNote, nextWeeklyNote,
-        insertTemplate, jumpToBacklink, searchPhrase
+        insertTemplate, jumpToBacklink, searchPhrase,
     ))
 
 
     appActions.sortBy { it.name }
 
-    shortcuts.add(Shortcut(Key.S, KeyModifier.Ctrl), saveAction)
-    shortcuts.add(Shortcut(Key.W, KeyModifier.Ctrl), closeCurrentNoteAction)
-    shortcuts.add(Shortcut(Key.N, KeyModifier.Ctrl), newNoteAction)
-    shortcuts.add(Shortcut(Key.R, KeyModifier.Ctrl, KeyModifier.Shift), selectRootAction)
-    shortcuts.add(Shortcut(Key.R, KeyModifier.Ctrl), cycleRootAction)
-    shortcuts.add(Shortcut(Key.G, KeyModifier.Ctrl), followLinkAction)
-    shortcuts.add(Shortcut(Key.P, KeyModifier.Ctrl), showNoteSearchDialog)
-    shortcuts.add(Shortcut(Key.P, KeyModifier.Ctrl, KeyModifier.Shift), showActionSearchDialog)
-    shortcuts.add(Shortcut(Key.D, KeyModifier.Ctrl), openDailyNote)
-    shortcuts.add(Shortcut(Key.U, KeyModifier.Ctrl), previousDailyNote)
-    shortcuts.add(Shortcut(Key.I, KeyModifier.Ctrl), nextDailyNote)
-    shortcuts.add(Shortcut(Key.F, KeyModifier.Ctrl, KeyModifier.Shift), searchPhrase)
+    shortcuts.add(Shortcut(Key.S, Ctrl), saveAction)
+    shortcuts.add(Shortcut(Key.W, Ctrl), closeCurrentNoteAction)
+    shortcuts.add(Shortcut(Key.N, Ctrl), newNoteAction)
+    shortcuts.add(Shortcut(Key.R, Ctrl, Shift), selectRootAction)
+    shortcuts.add(Shortcut(Key.R, Ctrl), cycleRootAction)
+    shortcuts.add(Shortcut(Key.G, Ctrl), followLinkAction)
+    shortcuts.add(Shortcut(Key.P, Ctrl), showNoteSearchDialog)
+    shortcuts.add(Shortcut(Key.P, Ctrl, Shift), showActionSearchDialog)
+    shortcuts.add(Shortcut(Key.D, Ctrl), openDailyNote)
+    shortcuts.add(Shortcut(Key.U, Ctrl), previousDailyNote)
+    shortcuts.add(Shortcut(Key.I, Ctrl), nextDailyNote)
+    shortcuts.add(Shortcut(Key.F, Ctrl, Shift), searchPhrase)
+    shortcuts.add(Shortcut(Key.K, Ctrl), createSelectPrevNoteAction(mainWindowController))
+    shortcuts.add(Shortcut(Key.J, Ctrl), createSelectNextNoteAction(mainWindowController))
 
     return shortcuts
 }
@@ -354,3 +358,9 @@ fun createSearchPhraseAction(ctl: MainWindowController): Action =
             }
         }
     }
+
+fun createSelectNextNoteAction(ctl: MainWindowController): Action =
+    Action("Select next note") { ctl.selectNextNote() }
+
+fun createSelectPrevNoteAction(ctl: MainWindowController): Action =
+    Action("Select previous note") { ctl.selectPrevNote() }

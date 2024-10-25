@@ -46,7 +46,11 @@ fun MainWindow(controller: MainWindowController,
         state = state.windowState,
         onCloseRequest = onCloseRequest,
         onPreviewKeyEvent = { event ->
-            controller.shortcuts.handle(event)
+            if (!controller.launcher.state.value.visible) {
+                controller.shortcuts.handle(event)
+            } else {
+                false
+            }
         }
     ) {
         selectedNoteIndex = selectedNoteIndex.coerceIn(minOf(-1, state.noteStreamState.cards.size-1), state.noteStreamState.cards.size-1)
@@ -64,7 +68,7 @@ fun MainWindow(controller: MainWindowController,
                         onUpdate = { stream -> controller.updateState { state.copy(noteStreamState = stream) } },
                         outlineNote = controller.selectedNoteIndex.value,
                         onItemFocused = { idx ->
-                            controller.selectedNoteIndex.value = idx
+                            controller.selectNote(idx)
                         }
                     )
                 }

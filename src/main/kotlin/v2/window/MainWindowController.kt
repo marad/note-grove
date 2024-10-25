@@ -32,6 +32,18 @@ class MainWindowController(
 
     val selectedNoteIndex = mutableStateOf(-1)
 
+    fun selectNote(index: Int) {
+        selectedNoteIndex.value = index
+    }
+
+    fun selectNextNote() {
+        selectNote(selectedNoteIndex.value + 1)
+    }
+
+    fun selectPrevNote() {
+        selectNote(selectedNoteIndex.value - 1)
+    }
+
     fun updateState(f: (MainWindowState) -> MainWindowState) {
         _state.update(f)
     }
@@ -55,12 +67,12 @@ class MainWindowController(
         val index = stream.cards.find { it.buffer.name == noteName }
             ?.let { stream.cards.indexOf(it) }
         if (index != null) {
-            selectedNoteIndex.value = index
+            selectNote(index)
             coScope.launch {
                 streamLazyListState.animateScrollToItem(index)
             }
         } else {
-            selectedNoteIndex.value += 1
+            selectNextNote()
             updateState {
                 it.copy(
                     noteStreamState = stream.insert(
