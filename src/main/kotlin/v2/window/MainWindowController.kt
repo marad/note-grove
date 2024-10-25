@@ -69,7 +69,7 @@ class MainWindowController(
                         }), selectedNoteIndex.value))
             }
             coScope.launch {
-                streamLazyListState.animateScrollToItem(0)
+                streamLazyListState.animateScrollToItem(selectedNoteIndex.value)
             }
         }
     }
@@ -128,6 +128,10 @@ class MainWindowController(
         Files.write(file, updatedContent.toByteArray())
     }
 
+    fun saveAll() {
+        stream.cards.forEach(this::saveNote)
+    }
+
     fun deleteNote(card: NoteCardState) {
         closeNote(card)
         Files.delete(card.buffer.path)
@@ -140,6 +144,7 @@ class MainWindowController(
     fun renameNote(old: NoteName, new: NoteName) {
         val oldCard = getNote(old)
         if (oldCard != null) {
+            saveNote(oldCard)
             val root = oldCard.buffer.root
             val updatedNotes = root.renameNote(old, new)
             // FIXME: this should probably update buffer state in place
@@ -154,6 +159,7 @@ class MainWindowController(
     }
 
     fun refactorHierarchy(srcPattern: String, dstPattern: String, files: List<NoteName>) {
+        saveAll()
         files.forEach {
             val newName = NoteName(it.value.replace(srcPattern, dstPattern))
             renameNote(it, newName)
