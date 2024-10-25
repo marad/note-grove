@@ -6,7 +6,9 @@ import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -16,7 +18,6 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -120,18 +121,19 @@ fun NoteStream(state: NoteStreamState,
                             scrollIfCursorOutOfView(position)
                         },
                         onClose = { onUpdate(state.closeCardAt(idx)) },
-                        modifier = Modifier.onFocusChanged {
-                            if (it.hasFocus) {
-                                onItemFocused(idx)
-                            }
-                        }.let {
-                            if (outlineNote == idx) {
-                                it.shadow(5.dp)
-                                    .border(1.dp, Color.Gray, RoundedCornerShape(5.dp))
-                            } else {
-                                it
-                            }
-                        },
+                        modifier = Modifier
+                            .onFocusChanged {
+                                if (it.hasFocus) {
+                                    onItemFocused(idx)
+                                }
+                            }.let {
+                                if (outlineNote == idx) {
+                                    it//.shadow(1.dp, shape = RoundedCornerShape(5.dp))
+                                        .border(1.dp, Color.Gray, RoundedCornerShape(5.dp))
+                                } else {
+                                    it
+                                }
+                            },
                         textFieldModifier = Modifier.onGloballyPositioned {
                             textFieldPosition = it.positionInParent().y
                         },
@@ -143,6 +145,9 @@ fun NoteStream(state: NoteStreamState,
 
                 }
             }
+
+            Spacer(Modifier.width(8.dp))
+
             VerticalScrollbar(adapter = rememberScrollbarAdapter(lazyListState))
         }
     } else {

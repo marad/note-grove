@@ -25,6 +25,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
@@ -57,13 +58,14 @@ fun NoteCard(state: NoteCardState,
              onChange: (NoteCardState) -> Unit = {},
              onClose: () -> Unit = {},
              onTextLayout: (TextLayoutResult) -> Unit = {},
+             shape: Shape = RoundedCornerShape(5.dp)
 ) {
     val focusRequester = remember {  FocusRequester() }
     val content by state.buffer.content.map {
         TextFieldValue(it, state.selection)
     }.collectAsState(state.textFieldValue)
 
-    Card(modifier) {
+    Surface(modifier, shape = shape) {
         Column(Modifier.padding(8.dp)) {
             Row(Modifier.padding(vertical = 10.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(
