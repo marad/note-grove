@@ -106,7 +106,7 @@ class LauncherViewModel : ViewModel() {
              forceAccept: (String) -> Unit = {},
              searchActions: (String) -> List<Action>,
              ) {
-        val finalQuery = initialQuery ?: _state.value.text.text
+        val finalQuery = initialQuery ?: ""
         _state.value = LauncherState(
             visible = true,
             text = _state.value.text.copy(

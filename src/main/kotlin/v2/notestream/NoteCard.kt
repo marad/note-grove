@@ -25,6 +25,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
@@ -46,6 +47,20 @@ data class NoteCardState(
     fun update(textFieldValue: TextFieldValue): NoteCardState {
         buffer.updateContent(textFieldValue.annotatedString)
         return copy(selection = textFieldValue.selection)
+    }
+
+    fun insertAtCursor(text: String): NoteCardState {
+        val cursor = selection.start
+        val content = buffer.content.value.text
+        val updatedContent = StringBuilder()
+        updatedContent.append(content.substring(0, cursor))
+        updatedContent.append(text)
+        updatedContent.append(content.substring(cursor))
+
+        // update the content
+        buffer.updateContent(AnnotatedString(updatedContent.toString()))
+        // move cursor to the end of inserted text
+        return copy(selection = TextRange(selection.start + text.length))
     }
 }
 

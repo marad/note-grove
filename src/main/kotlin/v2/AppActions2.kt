@@ -7,8 +7,6 @@ import NoteName
 import Shortcut
 import Shortcuts
 import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.TextRange
 import files.internal.MatchingStrategy
 import tools.rg.Match
 import v2.window.MainWindowController
@@ -41,6 +39,7 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
     val insertTemplate = createInsertTemplateAction(mainWindowController)
     val jumpToBacklink = createJumpToBacklinkAction(mainWindowController)
     val searchPhrase = createSearchPhraseAction(mainWindowController)
+    val insertNoteLink = createInsertNoteLinkAction(mainWindowController)
 
     appActions.addAll(listOf(
         saveAction, newNoteAction, deleteNoteAction, renameNoteAction, selectRootAction,
@@ -50,6 +49,7 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
         openDailyNote, previousDailyNote, nextDailyNote,
         openWeeklyNote, previousWeeklyNote, nextWeeklyNote,
         insertTemplate, jumpToBacklink, searchPhrase,
+        insertNoteLink
     ))
 
 
@@ -69,6 +69,7 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
     shortcuts.add(Shortcut(Key.F, Ctrl, Shift), searchPhrase)
     shortcuts.add(Shortcut(Key.K, Ctrl), createSelectPrevNoteAction(mainWindowController))
     shortcuts.add(Shortcut(Key.J, Ctrl), createSelectNextNoteAction(mainWindowController))
+    shortcuts.add(Shortcut(Key.I, Ctrl, Shift), insertNoteLink)
 
     return shortcuts
 }
@@ -105,6 +106,21 @@ fun createSearchActionsAction(ctl: MainWindowController, appActions: List<Action
             searchActions(ctl, appActions, it)
         }
     }
+
+fun createInsertNoteLinkAction(ctl: MainWindowController): Action =
+    Action("Insert note link", "Helps you find a note and insert a link to it") {
+        ctl.launcher.show("") { name ->
+            ctl.root.searchFiles(name, MatchingStrategy::fuzzy).map {
+                Action(it.value) {
+                    val note = ctl.currentNote()
+                    if (note != null) {
+                        ctl.updateCard(note.insertAtCursor("[[${it.value}]]"))
+                    }
+                }
+            }
+        }
+    }
+
 
 fun createCloseCurrentNoteAction(mainWindowController: MainWindowController): Action =
     Action("Close selected note", "Closes currently selected note") {
@@ -302,17 +318,8 @@ fun createInsertTemplateAction(ctl: MainWindowController): Action =
                     Action(template) {
                         val note = ctl.currentNote()
                         if (note != null) {
-                            val cursor = note.selection.start
                             val templateContent = Templates.loadTemplate(ctl.root, NoteName(template))
-                            val content = note.buffer.content.value.text
-                            val updatedContentBuilder = StringBuilder()
-                            updatedContentBuilder.append(content.substring(0, cursor))
-                            updatedContentBuilder.append(templateContent)
-                            updatedContentBuilder.append(content.substring(cursor))
-                            // update the content
-                            note.buffer.updateContent(AnnotatedString(updatedContentBuilder.toString()))
-                            // move the cursor at the end
-                            ctl.updateCard(note.copy(selection = TextRange(note.selection.start+templateContent.length)))
+                            ctl.updateCard(note.insertAtCursor(templateContent))
                         }
                     }
                 }
