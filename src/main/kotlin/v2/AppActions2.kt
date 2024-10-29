@@ -40,6 +40,8 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
     val jumpToBacklink = createJumpToBacklinkAction(mainWindowController)
     val searchPhrase = createSearchPhraseAction(mainWindowController)
     val insertNoteLink = createInsertNoteLinkAction(mainWindowController)
+    val moveNoteUp = createMoveNoteUpAction(mainWindowController)
+    val moveNoteDown = createMoveNoteDownAction(mainWindowController)
 
     appActions.addAll(listOf(
         saveAction, newNoteAction, deleteNoteAction, renameNoteAction, selectRootAction,
@@ -49,7 +51,7 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
         openDailyNote, previousDailyNote, nextDailyNote,
         openWeeklyNote, previousWeeklyNote, nextWeeklyNote,
         insertTemplate, jumpToBacklink, searchPhrase,
-        insertNoteLink
+        insertNoteLink, moveNoteUp, moveNoteDown
     ))
 
 
@@ -70,6 +72,8 @@ fun prepareActionsAndShortcuts(mainWindowController: MainWindowController): Shor
     shortcuts.add(Shortcut(Key.K, Ctrl), createSelectPrevNoteAction(mainWindowController))
     shortcuts.add(Shortcut(Key.J, Ctrl), createSelectNextNoteAction(mainWindowController))
     shortcuts.add(Shortcut(Key.I, Ctrl, Shift), insertNoteLink)
+    shortcuts.add(Shortcut(Key.K, Ctrl, Shift), moveNoteUp)
+    shortcuts.add(Shortcut(Key.J, Ctrl, Shift), moveNoteDown)
 
     return shortcuts
 }
@@ -371,3 +375,9 @@ fun createSelectNextNoteAction(ctl: MainWindowController): Action =
 
 fun createSelectPrevNoteAction(ctl: MainWindowController): Action =
     Action("Select previous note") { ctl.selectPrevNote() }
+
+fun createMoveNoteUpAction(ctl: MainWindowController): Action =
+    Action("Move note up") { ctl.moveNoteUp() }
+
+fun createMoveNoteDownAction(ctl: MainWindowController): Action =
+    Action("Move note down") { ctl.moveNoteDown() }

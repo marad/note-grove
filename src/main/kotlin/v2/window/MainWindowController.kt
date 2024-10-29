@@ -15,6 +15,7 @@ import v2.BufferManager
 import v2.notestream.NoteCardState
 import v2.prepareActionsAndShortcuts
 import java.nio.file.Files
+import java.util.Collections
 
 class MainWindowController(
     private val bufferManager: BufferManager,
@@ -48,6 +49,33 @@ class MainWindowController(
 
     fun selectPrevNote() {
         selectNote(selectedNoteIndex.value - 1)
+    }
+
+    fun moveNoteUp() {
+        val note = currentNote()
+        val index = stream.cards.indexOf(note)
+        if (index > 0) {
+            val newCards = stream.cards.toMutableList()
+            Collections.swap(newCards, index, index - 1)
+
+            updateState {
+                it.copy(noteStreamState = stream.copy(cards = newCards))
+            }
+            selectPrevNote()
+        }
+    }
+
+    fun moveNoteDown() {
+        val note = currentNote()
+        val index = stream.cards.indexOf(note)
+        if (index >= 0 && index < stream.cards.size-1) {
+            val newCards = stream.cards.toMutableList()
+            Collections.swap(newCards, index, index + 1)
+            updateState {
+                it.copy(noteStreamState = stream.copy(cards = newCards))
+            }
+            selectNextNote()
+        }
     }
 
     fun updateState(f: (MainWindowState) -> MainWindowState) {
