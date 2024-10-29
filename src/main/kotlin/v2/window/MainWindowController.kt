@@ -30,12 +30,15 @@ class MainWindowController(
     val streamLazyListState = LazyListState()
     val shortcuts = prepareActionsAndShortcuts(this)
 
-    val selectedNoteIndex = mutableStateOf(-1)
+    val selectedNoteIndex = mutableStateOf(0)
 
     fun selectNote(index: Int) {
-        selectedNoteIndex.value = index
-        coScope.launch {
-            streamLazyListState.animateScrollToItem(index)
+        val changed = selectedNoteIndex.value != index
+        selectedNoteIndex.value = index.coerceIn(0, (stream.cards.size-1).coerceAtLeast(0))
+        if (changed) {
+            coScope.launch {
+                streamLazyListState.animateScrollToItem(selectedNoteIndex.value)
+            }
         }
     }
 

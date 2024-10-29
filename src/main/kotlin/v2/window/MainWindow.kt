@@ -37,7 +37,6 @@ fun MainWindow(controller: MainWindowController,
                onCloseRequest: () -> Unit = {}) {
 
     val state by controller.state.collectAsState()
-    var selectedNoteIndex by controller.selectedNoteIndex
 
     Window(
         title = "Note Grove - ${state.root.name}",
@@ -51,8 +50,6 @@ fun MainWindow(controller: MainWindowController,
             }
         }
     ) {
-        selectedNoteIndex = selectedNoteIndex.coerceIn(minOf(-1, state.noteStreamState.cards.size-1), state.noteStreamState.cards.size-1)
-        
         MaterialTheme {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Surface(color = Color(0xFFEEEEEE), modifier = Modifier.fillMaxSize()) {}
